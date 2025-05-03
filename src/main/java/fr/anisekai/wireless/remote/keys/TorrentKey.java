@@ -1,0 +1,39 @@
+package fr.anisekai.wireless.remote.keys;
+
+import fr.anisekai.wireless.remote.interfaces.TorrentEntity;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.Serializable;
+
+/**
+ * A composite key representing a specific file within a torrent, identified by its torrent ID and file index.
+ *
+ * @param torrentId
+ *         The unique identifier of the torrent
+ * @param index
+ *         The file index within the torrent
+ */
+public record TorrentKey(String torrentId, int index) implements Serializable {
+
+    /**
+     * Creates a new {@link TorrentKey} instance from a {@link TorrentEntity} and a file index.
+     *
+     * @param torrent
+     *         the torrent entity
+     * @param index
+     *         the index of the file inside the torrent
+     *
+     * @return A new {@link TorrentKey} instance
+     *
+     * @throws AssertionError
+     *         Threw if the torrent ID is {@code null} or the index is negative.
+     */
+    public static @NotNull TorrentKey create(@NotNull TorrentEntity torrent, int index) {
+
+        assert torrent.getId() != null;
+        assert index >= 0;
+        return new TorrentKey(torrent.getId(), index);
+    }
+
+}
+
