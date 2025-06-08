@@ -130,10 +130,10 @@ public class Transmission {
      *         The {@link Torrent}'s download directory
      * @param percentDone
      *         The {@link Torrent}'s download progress (0 to 1)
-     * @param file
-     *         The {@link Torrent}'s file name.
+     * @param files
+     *         The {@link Torrent}'s file names.
      */
-    public record Torrent(String hash, TorrentStatus status, String downloadDir, double percentDone, String file) {
+    public record Torrent(String hash, TorrentStatus status, String downloadDir, double percentDone, List<String> files) {
 
         /**
          * Creates a {@link Torrent} instance from an {@link AnisekaiJson} object representing a Transmission torrent.
@@ -150,8 +150,9 @@ public class Transmission {
             TorrentStatus status      = TorrentStatus.from(json.getInt("status"));
             String        downloadDir = json.getString("downloadDir");
             double        percentDone = json.getDouble("percentDone");
-            String        file        = json.getString("files.0.name");
-            return new Torrent(hash, status, downloadDir, percentDone, file);
+            List<String>  files       = json.readArray("files").map(rawFile -> rawFile.getString("name"));
+
+            return new Torrent(hash, status, downloadDir, percentDone, files);
         }
 
     }
