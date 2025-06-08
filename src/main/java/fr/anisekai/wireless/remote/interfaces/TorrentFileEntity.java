@@ -13,7 +13,22 @@ import org.jetbrains.annotations.NotNull;
  * @param <T>
  *         Type for the {@link AnimeEntity} implementation.
  */
-public interface TorrentFileEntity<T extends TorrentEntity> extends Entity<TorrentKey> {
+public interface TorrentFileEntity<E extends EpisodeEntity<?>, T extends TorrentEntity> extends Entity<TorrentKey> {
+
+    /**
+     * Retrieve to which {@link EpisodeEntity} this {@link TorrentFileEntity} belongs.
+     *
+     * @return An {@link EpisodeEntity}.
+     */
+    E getEpisode();
+
+    /**
+     * Define to which {@link EpisodeEntity} this {@link TorrentFileEntity} belongs.
+     *
+     * @param episode
+     *         An {@link EpisodeEntity}
+     */
+    void setEpisode(E episode);
 
     /**
      * Retrieve to which {@link TorrentEntity} this {@link TorrentFileEntity} belongs.

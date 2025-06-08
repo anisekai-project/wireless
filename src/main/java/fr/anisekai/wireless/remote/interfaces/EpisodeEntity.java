@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
  * @param <F>
  *         Type for the {@link TorrentFileEntity} implementation.
  */
-public interface EpisodeEntity<A extends AnimeEntity<?>, F extends TorrentFileEntity<?>> extends Entity<Long> {
+public interface EpisodeEntity<A extends AnimeEntity<?>> extends Entity<Long> {
 
     /**
      * Retrieve the {@link AnimeEntity} to which this {@link EpisodeEntity} belongs.
@@ -28,21 +28,6 @@ public interface EpisodeEntity<A extends AnimeEntity<?>, F extends TorrentFileEn
      *         The {@link AnimeEntity}
      */
     void setAnime(@NotNull A anime);
-
-    /**
-     * Retrieve the {@link TorrentFileEntity} from which this {@link EpisodeEntity} has been downloaded.
-     *
-     * @return A {@link TorrentFileEntity}.
-     */
-    @Nullable F getTorrentFile();
-
-    /**
-     * Define the {@link TorrentFileEntity} from which this {@link EpisodeEntity} has been downloaded.
-     *
-     * @param torrentFile
-     *         A {@link TorrentFileEntity}.
-     */
-    void setTorrentFile(@Nullable F torrentFile);
 
     /**
      * Retrieve this {@link EpisodeEntity}'s number within the {@link AnimeEntity}.

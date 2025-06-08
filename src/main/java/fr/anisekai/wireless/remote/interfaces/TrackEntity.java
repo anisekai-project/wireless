@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
  * @param <E>
  *         Type for the {@link EpisodeEntity} implementation.
  */
-public interface TrackEntity<E extends EpisodeEntity<?, ?>> extends Entity<Long> {
+public interface TrackEntity<E extends EpisodeEntity<?>> extends Entity<Long> {
 
     /**
      * Retrieve the {@link EpisodeEntity} to which this {@link TrackEntity} belongs.
