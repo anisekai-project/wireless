@@ -10,6 +10,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Interface representing the base structure for a torrent file.
  *
+ * @param <E>
+ *         Type for the {@link EpisodeEntity} implementation.
  * @param <T>
  *         Type for the {@link AnimeEntity} implementation.
  */

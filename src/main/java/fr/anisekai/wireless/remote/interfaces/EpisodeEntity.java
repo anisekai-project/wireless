@@ -9,8 +9,6 @@ import org.jetbrains.annotations.Nullable;
  *
  * @param <A>
  *         Type for the {@link AnimeEntity} implementation.
- * @param <F>
- *         Type for the {@link TorrentFileEntity} implementation.
  */
 public interface EpisodeEntity<A extends AnimeEntity<?>> extends Entity<Long> {
 
