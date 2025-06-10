@@ -263,16 +263,16 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
         // Check if nothing overlaps the temporary state with the delay
         if (events.stream()
                   .map(item -> (Planifiable<T>) new BookedPlanifiable<>(item))
-                  .peek(item -> item.delayBy(delay))
+                  .peek(item -> item.setStartingAt(item.getStartingAt().plus(delay)))
                   .anyMatch(item -> temporaryState.stream().anyMatch(state -> this.isOverlapping(item, state)))) {
 
             throw new DelayOverlapException("One of the event cannot be delayed without conflict.");
         }
 
         // Apply the modification for real now
-        List<E> updated = this.getManager().updateAll(events, item -> item.delayBy(delay));
+        List<E> updated = this.getManager().updateAll(events, item -> item.setStartingAt(item.getStartingAt().plus(delay)));
         // And update the internal state to keep track
-        events.forEach(item -> item.delayBy(delay));
+        events.forEach(item -> item.setStartingAt(item.getStartingAt().plus(delay)));
 
         return updated;
     }

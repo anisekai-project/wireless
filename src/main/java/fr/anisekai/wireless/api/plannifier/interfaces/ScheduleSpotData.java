@@ -88,17 +88,6 @@ public interface ScheduleSpotData<T extends WatchTarget> {
     void setSkipEnabled(boolean skipEnabled);
 
     /**
-     * Delay the starting date of this {@link Planifiable} by the provided {@link Duration}.
-     *
-     * @param modBy
-     *         The {@link Duration} to delay
-     */
-    default void delayBy(@NotNull Duration modBy) {
-
-        this.setStartingAt(this.getStartingAt().plus(modBy));
-    }
-
-    /**
      * Retrieve the {@link ZonedDateTime} at which this {@link Planifiable} will end, computed as
      * {@code getStartingAt() + getDuration()}
      *
