@@ -307,6 +307,10 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
             long maxEpisode  = targetMaxEpisode.get(event.getWatchTarget());
             long progression = targetProgression.get(event.getWatchTarget());
 
+            if (maxEpisode < 0) { // Support for "estimate" amount of episode, which are represented by negative number.
+                maxEpisode = maxEpisode * -1;
+            }
+
             boolean correctFirstEpisode = event.getFirstEpisode() == progression + 1;
             boolean correctEpisodeCount = (event.getFirstEpisode() + event.getEpisodeCount()) - 1 <= maxEpisode;
 
