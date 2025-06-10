@@ -11,12 +11,12 @@ import java.io.Serializable;
  * <p>
  * Used to uniquely identify a user's interest in a particular anime.
  *
- * @param animeId
+ * @param anime
  *         The {@link AnimeEntity} ID
- * @param userId
+ * @param user
  *         The {@link UserEntity} ID
  */
-public record InterestKey(long animeId, long userId) implements Serializable {
+public record InterestKey(long anime, long user) implements Serializable {
 
     /**
      * Creates a new {@link InterestKey} from the given {@link AnimeEntity} and {@link UserEntity}.

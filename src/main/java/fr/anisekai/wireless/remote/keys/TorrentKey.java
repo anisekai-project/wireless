@@ -8,12 +8,12 @@ import java.io.Serializable;
 /**
  * A composite key representing a specific file within a torrent, identified by its torrent ID and file index.
  *
- * @param torrentId
+ * @param torrent
  *         The unique identifier of the torrent
  * @param index
  *         The file index within the torrent
  */
-public record TorrentKey(String torrentId, int index) implements Serializable {
+public record TorrentKey(String torrent, int index) implements Serializable {
 
     /**
      * Creates a new {@link TorrentKey} instance from a {@link TorrentEntity} and a file index.

@@ -9,12 +9,12 @@ import java.io.Serializable;
 /**
  * A composite key representing a voter's participation in a specific selection, identified by the selection ID and voter ID.
  *
- * @param selectionId
+ * @param selection
  *         The ID of the selection
- * @param voterId
+ * @param user
  *         The ID of the voter (user)
  */
-public record VoterKey(long selectionId, long voterId) implements Serializable {
+public record VoterKey(long selection, long user) implements Serializable {
 
     /**
      * Creates a new {@link VoterKey} instance from a {@link SelectionEntity} and a {@link UserEntity}.
