@@ -14,9 +14,6 @@ import java.util.*;
 /**
  * Basic client to interact with a Transmission BitTorrent daemon using its RPC interface.
  *
- * <p>This class provides essential features for querying torrents, offering new torrents to download,
- * and managing sessions with the Transmission daemon.</p>
- *
  * <p><b>Note:</b> This is a minimal implementation tailored for the Anisekai project.
  * For more advanced usage and features, consider using a dedicated Transmission client library.</p>
  */
@@ -275,12 +272,17 @@ public class Transmission {
     /**
      * Retrieve a {@link Set} of {@link Torrent} from the remote transmission daemon server.
      *
-     * @return A {@link Set} of {@link Torrent}.
+     * @param hashes
+     *         List of {@link Torrent} hashes to query. If empty, all torrents will be retrieved.
+     *
+     * @return A {@link Collection} of {@link Torrent}.
      *
      * @throws Exception
      *         Thrown if the query to the server fails.
+     * @throws IllegalStateException
+     *         Thrown if the response indicate a failure or if the response was not parsable.
      */
-    public Set<Torrent> queryTorrents() throws Exception {
+    public List<Torrent> query(Collection<String> hashes) throws Exception {
 
         if (this.getSessionId().isEmpty()) {
             this.getSession();
@@ -289,6 +291,10 @@ public class Transmission {
         AnisekaiJson packetData = new AnisekaiJson();
         packetData.put("method", "torrent-get");
         packetData.put("arguments.fields", DEFAULT_TORRENT_FIELDS);
+
+        if (!hashes.isEmpty()) {
+            packetData.put("arguments.ids", hashes);
+        }
 
         AnisekaiJson response = this.sendPacket(packetData);
         String       status   = response.getString("result");
@@ -299,26 +305,52 @@ public class Transmission {
 
         AnisekaiJson  arguments  = response.readJson("arguments");
         AnisekaiArray torrents   = arguments.readArray("torrents");
-        Set<Torrent>  torrentSet = new HashSet<>();
+        List<Torrent> torrentSet = new ArrayList<>();
 
         torrents.forEachJson(json -> torrentSet.add(Torrent.of(json)));
         return torrentSet;
     }
 
     /**
-     * Offer the provided {@link Nyaa.Entry} to the transmission daemon server.
+     * Retrieve a single {@link Torrent} from the remote transmission daemon server.
      *
-     * @param nyaaRssEntry
+     * @param hash
+     *         {@link Torrent} hash to query.
+     *
+     * @return A {@link Torrent}.
+     *
+     * @throws Exception
+     *         Thrown if the query to the server fails.
+     * @throws IllegalStateException
+     *         Thrown if the response indicate a failure or if the response was not parsable.
+     * @throws IllegalArgumentException
+     *         Thrown if the transmission daemon response did not include the requested {@link Torrent}
+     */
+    public Torrent query(String hash) throws Exception {
+
+        List<Torrent> query = this.query(Collections.singleton(hash));
+        if (query.isEmpty()) {
+            throw new IllegalArgumentException("Torrent with hash " + hash + " not found");
+        }
+        return query.getFirst();
+    }
+
+    /**
+     * Send the provided {@link Nyaa.Entry} to the transmission daemon server.
+     *
+     * @param entry
      *         The {@link Nyaa.Entry} to download.
+     * @param paused
+     *         Define if the download should not start immediately.
      *
-     * @return The server response.
+     * @return The added {@link Torrent} matching the provided {@link Nyaa.Entry}.
      *
      * @throws Exception
      *         Thrown if the query to the server fails.
      * @throws IllegalStateException
      *         Thrown if the response indicate a failure or if the response was not parsable.
      */
-    public Torrent offerTorrent(Nyaa.Entry nyaaRssEntry) throws Exception {
+    public Torrent download(Nyaa.Entry entry, boolean paused) throws Exception {
 
         if (this.getSessionId().isEmpty()) {
             this.getSession();
@@ -326,7 +358,8 @@ public class Transmission {
 
         AnisekaiJson packetData = new AnisekaiJson();
         packetData.put("method", "torrent-add");
-        packetData.put("arguments.filename", nyaaRssEntry.link());
+        packetData.put("arguments.paused", paused);
+        packetData.put("arguments.filename", entry.link());
 
         AnisekaiJson response = this.sendPacket(packetData);
         String       result   = response.getString("result");
@@ -346,7 +379,79 @@ public class Transmission {
             throw new IllegalStateException("Transmission client failed to read server response.");
         }
 
-        return Torrent.of(json);
+        String hash = json.getString("hashString");
+        return this.query(hash);
+    }
+
+    /**
+     * Starts the provided {@link Torrent} when it has been added with the pause flag.
+     *
+     * @param torrent
+     *         The {@link Torrent} to start.
+     *
+     * @return The refreshed {@link Torrent}.
+     *
+     * @throws Exception
+     *         Thrown if the query to the server fails.
+     * @throws IllegalStateException
+     *         Thrown if the response indicate a failure or if the response was not parsable.
+     */
+    public Torrent start(Torrent torrent) throws Exception {
+
+        if (torrent.status() != TorrentStatus.STOPPED) {
+            throw new IllegalStateException("Torrent with hash " + torrent.hash() + " already started");
+        }
+
+        if (this.getSessionId().isEmpty()) {
+            this.getSession();
+        }
+
+        AnisekaiJson packetData = new AnisekaiJson();
+        packetData.put("method", "torrent-start");
+        packetData.put("arguments.ids", Collections.singleton(torrent.hash()));
+
+        AnisekaiJson response = this.sendPacket(packetData);
+        String       result   = response.getString("result");
+
+        if (!result.equals("success")) {
+            throw new IllegalStateException("Transmission client failed to start torrent");
+        }
+
+        return this.query(torrent.hash);
+    }
+
+    /**
+     * Delete the provided {@link Torrent}.
+     *
+     * @param torrent
+     *         The {@link Torrent} to delete.
+     *
+     * @throws Exception
+     *         Thrown if the query to the server fails.
+     * @throws IllegalStateException
+     *         Thrown if the response indicate a failure or if the response was not parsable.
+     */
+    public void delete(Torrent torrent) throws Exception {
+
+        if (torrent.status() != TorrentStatus.STOPPED) {
+            throw new IllegalStateException("Torrent with hash " + torrent.hash() + " already started");
+        }
+
+        if (this.getSessionId().isEmpty()) {
+            this.getSession();
+        }
+
+        AnisekaiJson packetData = new AnisekaiJson();
+        packetData.put("method", "torrent-remove");
+        packetData.put("arguments.ids", Collections.singleton(torrent.hash()));
+        packetData.put("arguments.delete-local-data", true);
+
+        AnisekaiJson response = this.sendPacket(packetData);
+        String       result   = response.getString("result");
+
+        if (!result.equals("success")) {
+            throw new IllegalStateException("Transmission client failed to start torrent");
+        }
     }
 
 
