@@ -10,6 +10,7 @@ import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Media (ffmpeg)")
@@ -54,16 +55,16 @@ public class MediaTests {
     @DisplayName("ffmpeg | MKV to split converted files")
     public void testExplode() {
 
-        File       target = getTestFile(TEST_DATA_FILE, true);
-        MediaFile  media  = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
-        List<File> files  = Assertions.assertDoesNotThrow(() -> FFMpeg.explode(media, Codec.H264, Codec.VORBIS));
+        File                   target = getTestFile(TEST_DATA_FILE, true);
+        MediaFile              media  = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
+        Map<MediaStream, File> files  = Assertions.assertDoesNotThrow(() -> FFMpeg.explode(media, Codec.H264, Codec.VORBIS));
 
         Assertions.assertEquals(5, files.size(), "File count mismatch");
-        Assertions.assertTrue(files.get(0).exists(), "File (0) does not exist");
-        Assertions.assertTrue(files.get(1).exists(), "File (1) does not exist");
-        Assertions.assertTrue(files.get(2).exists(), "File (2) does not exist");
-        Assertions.assertTrue(files.get(3).exists(), "File (3) does not exist");
-        Assertions.assertTrue(files.get(4).exists(), "File (4) does not exist");
+
+        int count = 0;
+        for (MediaStream stream : media.getStreams()) {
+            Assertions.assertTrue(files.get(stream).exists(), "File (" + count + ") does not exist");
+        }
 
         for (MediaStream stream : media.getStreams()) {
             File file = switch (stream.codec().getType()) {

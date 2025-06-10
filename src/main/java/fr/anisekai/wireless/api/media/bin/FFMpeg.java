@@ -85,13 +85,13 @@ public final class FFMpeg {
      *         Threw if deletion of pre-existing output files fails or if ffmpeg execution fails
      */
 
-    public static List<File> explode(MediaFile media, Codec videoCodec, Codec audioCodec) throws IOException, InterruptedException {
+    public static Map<MediaStream, File> explode(MediaFile media, Codec videoCodec, Codec audioCodec) throws IOException, InterruptedException {
 
         if (videoCodec.getType() != CodecType.VIDEO) throw new IllegalArgumentException("video codec must be of type video");
         if (audioCodec.getType() != CodecType.AUDIO) throw new IllegalArgumentException("audio codec must be of type audio");
 
-        File       parent      = media.getFile().getParentFile();
-        List<File> outputFiles = new ArrayList<>();
+        File                   parent      = media.getFile().getParentFile();
+        Map<MediaStream, File> outputFiles = new HashMap<>();
 
         Binary ffmpeg = Binary.ffmpeg();
         ffmpeg.setBaseDir(parent);
@@ -107,25 +107,25 @@ public final class FFMpeg {
                     ffmpeg.addArguments("-crf", 25);
                     File videoOutput = stream.asFile(parent, videoCodec);
                     ffmpeg.addArgument(videoOutput.getName());
-                    outputFiles.add(videoOutput);
+                    outputFiles.put(stream, videoOutput);
                     break;
                 case AUDIO:
                     ffmpeg.addArguments("-c:a", audioCodec.getLibName());
                     File audioOutput = stream.asFile(parent, audioCodec);
                     ffmpeg.addArgument(audioOutput.getName());
-                    outputFiles.add(audioOutput);
+                    outputFiles.put(stream, audioOutput);
                     break;
                 case SUBTITLE:
                     ffmpeg.addArguments("-c:s", "copy");
                     File subtitleOutput = stream.asFile(parent);
                     ffmpeg.addArgument(subtitleOutput.getName());
-                    outputFiles.add(subtitleOutput);
+                    outputFiles.put(stream, subtitleOutput);
                     break;
             }
 
         }
 
-        for (File outputFile : outputFiles) {
+        for (File outputFile : outputFiles.values()) {
             if (outputFile.exists()) {
                 if (!outputFile.delete()) {
                     throw new IllegalStateException("Could not delete " + outputFile.getAbsolutePath());
@@ -134,7 +134,7 @@ public final class FFMpeg {
         }
 
         int code = ffmpeg.execute(1, TimeUnit.HOURS);
-        if (!outputFiles.stream().allMatch(File::exists)) {
+        if (!outputFiles.values().stream().allMatch(File::exists)) {
             throw new IllegalStateException("ffmpeg(convert) failed with code " + code);
         }
         return outputFiles;
