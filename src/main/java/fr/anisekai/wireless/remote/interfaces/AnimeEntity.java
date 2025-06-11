@@ -20,6 +20,36 @@ import java.util.regex.Pattern;
 public interface AnimeEntity<U extends UserEntity> extends Entity<Long>, WatchTarget {
 
     /**
+     * Retrieve this {@link AnimeEntity}'s group.
+     *
+     * @return A group name
+     */
+    @NotNull String getGroup();
+
+    /**
+     * Define this {@link AnimeEntity}'s group.
+     *
+     * @param group
+     *         A group name
+     */
+    void setGroup(@NotNull String group);
+
+    /**
+     * Retrieve this {@link AnimeEntity}'s watch order within its group.
+     *
+     * @return A group watch order.
+     */
+    byte getOrder();
+
+    /**
+     * Define this {@link AnimeEntity}'s watch order within its group.
+     *
+     * @param order
+     *         A group watch order.
+     */
+    void setOrder(byte order);
+
+    /**
      * Retrieve this {@link AnimeEntity}'s title.
      *
      * @return A title.
