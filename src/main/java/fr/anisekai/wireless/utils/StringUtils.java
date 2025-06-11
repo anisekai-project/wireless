@@ -12,6 +12,24 @@ public final class StringUtils {
     private StringUtils() {}
 
     /**
+     * Cut the provided {@link CharSequence} to size, appending '...', if its length is above the provided threshold.
+     *
+     * @param charSequence
+     *         The {@link CharSequence} to truncate if necessary
+     * @param threshold
+     *         Amount of character max allowed (excluding '...')
+     *
+     * @return The {@link CharSequence}, truncated if necessary
+     */
+    public static String truncate(CharSequence charSequence, int threshold) {
+
+        if (charSequence.length() > threshold) {
+            return charSequence.subSequence(0, threshold) + "...";
+        }
+        return charSequence.toString();
+    }
+
+    /**
      * Returns a formatted string based on the value of the count.
      *
      * @param count
