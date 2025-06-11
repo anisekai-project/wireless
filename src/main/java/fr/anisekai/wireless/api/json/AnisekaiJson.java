@@ -22,14 +22,40 @@ import static fr.anisekai.wireless.utils.StringUtils.parseIntOrThrow;
 
 public class AnisekaiJson extends JSONObject {
 
-    private static final BiFunction<JSONObject, String, AnisekaiJson>  ANISEKAI_JSON_JSON   =
-            (json, key) -> new AnisekaiJson(json.getJSONObject(key));
+    private static final BiFunction<JSONObject, String, AnisekaiJson> ANISEKAI_JSON_JSON =
+            (json, key) -> {
+                JSONObject item = json.getJSONObject(key);
+                if (item instanceof AnisekaiJson anisekaiJson) return anisekaiJson;
+                AnisekaiJson anisekaiJson = new AnisekaiJson(item);
+                json.put(key, anisekaiJson);
+                return anisekaiJson;
+            };
+
     private static final BiFunction<JSONArray, Integer, AnisekaiArray> ANISEKAI_ARRAY_ARRAY =
-            (array, index) -> new AnisekaiArray(array.getJSONArray(index));
-    private static final BiFunction<JSONObject, String, AnisekaiArray> ANISEKAI_JSON_ARRAY  =
-            (json, key) -> new AnisekaiArray(json.getJSONArray(key));
-    private static final BiFunction<JSONArray, Integer, AnisekaiJson>  ANISEKAI_ARRAY_JSON  =
-            (array, index) -> new AnisekaiJson(array.getJSONObject(index));
+            (array, index) -> {
+                JSONArray item = array.getJSONArray(index);
+                if (item instanceof AnisekaiArray anisekaiArray) return anisekaiArray;
+                AnisekaiArray anisekaiArray = new AnisekaiArray(item);
+                array.put(index, anisekaiArray);
+                return anisekaiArray;
+            };
+
+    private static final BiFunction<JSONObject, String, AnisekaiArray> ANISEKAI_JSON_ARRAY =
+            (json, key) -> {
+                JSONArray item = json.getJSONArray(key);
+                if (item instanceof AnisekaiArray anisekaiArray) return anisekaiArray;
+                AnisekaiArray anisekaiArray = new AnisekaiArray(item);
+                json.put(key, anisekaiArray);
+                return anisekaiArray;
+            };
+    private static final BiFunction<JSONArray, Integer, AnisekaiJson>  ANISEKAI_ARRAY_JSON =
+            (array, index) -> {
+                JSONObject item = array.getJSONObject(index);
+                if (item instanceof AnisekaiJson anisekaiJson) return anisekaiJson;
+                AnisekaiJson anisekaiJson = new AnisekaiJson(item);
+                array.put(index, anisekaiJson);
+                return anisekaiJson;
+            };
 
     /**
      * Create an empty {@link AnisekaiJson} instance.
