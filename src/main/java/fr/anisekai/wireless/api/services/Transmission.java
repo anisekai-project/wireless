@@ -359,7 +359,7 @@ public class Transmission {
         AnisekaiJson packetData = new AnisekaiJson();
         packetData.put("method", "torrent-add");
         packetData.put("arguments.paused", paused);
-        packetData.put("arguments.filename", entry.link());
+        packetData.put("arguments.filename", entry.torrent());
 
         AnisekaiJson response = this.sendPacket(packetData);
         String       result   = response.getString("result");
