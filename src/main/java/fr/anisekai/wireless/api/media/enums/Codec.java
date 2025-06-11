@@ -1,5 +1,7 @@
 package fr.anisekai.wireless.api.media.enums;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 
 /**
@@ -17,6 +19,7 @@ public enum Codec {
     @SuppressWarnings("MissingJavadoc") MPEG2(CodecType.VIDEO, "mpg", "mpeg2video"),
     @SuppressWarnings("MissingJavadoc") PRORES(CodecType.VIDEO, "mov", "prores_ks"),
     @SuppressWarnings("MissingJavadoc") DV(CodecType.VIDEO, "dv", "dvvideo"),
+    @SuppressWarnings("MissingJavadoc") VIDEO_COPY(CodecType.VIDEO, null, "copy"),
 
     // Audio Codecs
     @SuppressWarnings("MissingJavadoc") AAC(CodecType.AUDIO, "m4a", "aac"),
@@ -30,6 +33,7 @@ public enum Codec {
     @SuppressWarnings("MissingJavadoc") TRUEHD(CodecType.AUDIO, "mlp", "truehd"),
     @SuppressWarnings("MissingJavadoc") ALAC(CodecType.AUDIO, "m4a", "alac"),
     @SuppressWarnings("MissingJavadoc") WAV(CodecType.AUDIO, "wav", "pcm_s16le"),
+    @SuppressWarnings("MissingJavadoc") AUDIO_COPY(CodecType.AUDIO, null, "copy"),
 
     // Subtitle Codecs
     @SuppressWarnings("MissingJavadoc") SRT(CodecType.SUBTITLE, "srt", "srt"),
@@ -122,10 +126,10 @@ public enum Codec {
      *
      * @return The matching {@link Codec}, or {@code null} if no match is found
      */
-    public static Codec fromExtension(String extension) {
+    public static Codec fromExtension(@NotNull String extension) {
 
         for (Codec codec : values()) {
-            if (codec.getExtension().equalsIgnoreCase(extension)) {
+            if (extension.equalsIgnoreCase(codec.getExtension())) {
                 return codec;
             }
         }

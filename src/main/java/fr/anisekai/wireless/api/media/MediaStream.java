@@ -44,6 +44,9 @@ public record MediaStream(int index, Codec codec, String language) {
      */
     public File asFile(File root, Codec override) {
 
+        if (override.getLibName().equals("copy")) {
+            return this.asFile(root);
+        }
         return new File(root, "%s.%s".formatted(this.index, override.getExtension()));
     }
 

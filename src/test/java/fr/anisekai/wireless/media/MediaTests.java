@@ -112,6 +112,28 @@ public class MediaTests {
         Assertions.assertEquals(2, media.getStreams(CodecType.SUBTITLE).size(), "Audio stream count mismatch");
     }
 
+    @Order(20)
+    @Test
+    @DisplayName("ffmpeg | Codec passthrough")
+    public void testPassthrough() {
+
+        File      target = getTestFile(TEST_DATA_FILE, true);
+        MediaFile media  = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
+
+        Map<MediaStream, File> files = Assertions.assertDoesNotThrow(() -> FFMpeg.explode(
+                media,
+                Codec.VIDEO_COPY,
+                Codec.AUDIO_COPY
+        ));
+
+        Assertions.assertEquals(5, files.size(), "File count mismatch");
+
+        int count = 0;
+        for (MediaStream stream : media.getStreams()) {
+            Assertions.assertTrue(files.get(stream).exists(), "File (" + count + ") does not exist");
+        }
+    }
+
     @AfterAll
     public static void onTestFinished() {
 
