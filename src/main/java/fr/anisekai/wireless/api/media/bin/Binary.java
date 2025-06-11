@@ -2,6 +2,8 @@ package fr.anisekai.wireless.api.media.bin;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -141,9 +143,23 @@ public class Binary {
         Runtime runtime = Runtime.getRuntime();
         Process process = runtime.exec(array, null, this.baseDir);
 
+        drainAsync(process.getInputStream());
+        drainAsync(process.getErrorStream());
+
         boolean exited = process.waitFor(timeout, unit);
+
         if (!exited) throw new IllegalStateException("Process timed out");
         return process.exitValue();
+    }
+
+    private static void drainAsync(InputStream input) {
+
+        new Thread(() -> {
+            try (input) {
+                input.transferTo(OutputStream.nullOutputStream());
+            } catch (IOException ignore) {
+            }
+        }).start();
     }
 
 }
