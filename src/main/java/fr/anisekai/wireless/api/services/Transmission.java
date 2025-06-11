@@ -24,7 +24,7 @@ public class Transmission {
      * ID, name, status, download directory, progress, and files.
      */
     public static final List<String> DEFAULT_TORRENT_FIELDS = Arrays.asList(
-            "id",
+            "hashString",
             "name",
             "status",
             "downloadDir",
