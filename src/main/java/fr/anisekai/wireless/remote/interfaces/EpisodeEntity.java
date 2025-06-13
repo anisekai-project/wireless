@@ -42,4 +42,19 @@ public interface EpisodeEntity<A extends AnimeEntity<?>> extends Entity<Long> {
      */
     void setNumber(int number);
 
+    /**
+     * Check if this {@link EpisodeEntity} is ready to be broadcasted.
+     *
+     * @return True if ready, false otherwise.
+     */
+    boolean isReady();
+
+    /**
+     * Define if this {@link EpisodeEntity} is ready to be broadcasted.
+     *
+     * @param ready
+     *         True if ready, false otherwise.
+     */
+    void setReady(boolean ready);
+
 }
