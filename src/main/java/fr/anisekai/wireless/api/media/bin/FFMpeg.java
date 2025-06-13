@@ -26,6 +26,21 @@ public final class FFMpeg {
 
     private FFMpeg() {}
 
+    private static void controlCodecs(@Nullable Codec videoCodec, @Nullable Codec audioCodec, @Nullable Codec subsCodec) {
+
+        if (videoCodec != null && videoCodec.getType() != CodecType.VIDEO) {
+            throw new IllegalArgumentException("video codec must be of type video");
+        }
+
+        if (audioCodec != null && audioCodec.getType() != CodecType.AUDIO) {
+            throw new IllegalArgumentException("audio codec must be of type audio");
+        }
+
+        if (subsCodec != null && subsCodec.getType() != CodecType.SUBTITLE) {
+            throw new IllegalArgumentException("subtitles codec must be of type subtitles");
+        }
+    }
+
     /**
      * Probes the specified media file using ffprobe and returns detailed stream information as {@link AnisekaiJson}.
      *
@@ -44,7 +59,7 @@ public final class FFMpeg {
 
     public static AnisekaiJson probe(File file) throws IOException, InterruptedException {
 
-        File   temp    = File.createTempFile("anisekai", null);
+        File   temp    = java.io.File.createTempFile("anisekai", null);
         Binary ffprobe = Binary.ffprobe();
         ffprobe.setBaseDir(file.getParentFile());
 
@@ -92,17 +107,7 @@ public final class FFMpeg {
 
     public static Map<MediaStream, File> explode(MediaFile media, @Nullable Codec videoCodec, @Nullable Codec audioCodec, @Nullable Codec subsCodec, int hourTimeout) throws IOException, InterruptedException {
 
-        if (videoCodec != null && videoCodec.getType() != CodecType.VIDEO) {
-            throw new IllegalArgumentException("video codec must be of type video");
-        }
-
-        if (audioCodec != null && audioCodec.getType() != CodecType.AUDIO) {
-            throw new IllegalArgumentException("audio codec must be of type audio");
-        }
-
-        if (subsCodec != null && subsCodec.getType() != CodecType.SUBTITLE) {
-            throw new IllegalArgumentException("subtitles codec must be of type subtitles");
-        }
+        controlCodecs(videoCodec, audioCodec, subsCodec);
 
         File                   parent      = media.getFile().getParentFile();
         Map<MediaStream, File> outputFiles = new HashMap<>();
@@ -146,7 +151,7 @@ public final class FFMpeg {
                     if (subsCodec == null) continue;
 
                     ffmpeg.addArguments("-map", "0:%s".formatted(stream.getId()));
-                    ffmpeg.addArguments("-c:s", "copy");
+                    ffmpeg.addArguments("-c:s", subsCodec.getLibName());
 
                     String subsExt = subsCodec.isCopyCodec() ? stream.getCodec().getExtension() : subsCodec.getExtension();
                     String subsName = "%s.%s".formatted(stream.getId(), subsExt);
@@ -169,10 +174,112 @@ public final class FFMpeg {
         }
 
         int code = ffmpeg.execute(hourTimeout, TimeUnit.HOURS);
-        if (!outputFiles.values().stream().allMatch(File::exists)) {
+        if (!outputFiles.values().stream().allMatch(java.io.File::exists)) {
             throw new IllegalStateException("ffmpeg(convert) failed with code " + code);
         }
         return outputFiles;
+    }
+
+    /**
+     * Convert individual streams from the given media file into another files using specified codecs.
+     *
+     * @param media
+     *         The media file containing streams to convert
+     * @param videoCodec
+     *         The codec to use for video streams (must be of type VIDEO). Set to {@code null} to ignore video streams.
+     * @param audioCodec
+     *         The codec to use for audio streams (must be of type AUDIO). Set to {@code null} to ignore audio streams.
+     * @param subsCodec
+     *         The codec to use for subtitles streams (must be of type SUBTITLES). Set to {@code null} to ignore subtitles
+     *         streams.
+     * @param hourTimeout
+     *         Maximum amount of hours to wait for the conversion to finish.
+     *
+     * @return A {@link File} representing the converted file
+     *
+     * @throws IOException
+     *         Threw if an I/O error occurs during extraction
+     * @throws InterruptedException
+     *         Threw if the extraction process is interrupted
+     * @throws IllegalArgumentException
+     *         Threw if the provided codecs are not of the expected types
+     * @throws IllegalStateException
+     *         Threw if deletion of pre-existing output files fails or if ffmpeg execution fails
+     */
+    public static File convert(MediaFile media, @Nullable Codec videoCodec, @Nullable Codec audioCodec, @Nullable Codec subsCodec, int hourTimeout) throws IOException, InterruptedException {
+
+        File output = File.createTempFile("anisekai", ".mkv");
+        convert(media, videoCodec, audioCodec, subsCodec, output, hourTimeout);
+        return output;
+    }
+
+    /**
+     * Convert individual streams from the given media file into another files using specified codecs.
+     *
+     * @param media
+     *         The media file containing streams to convert
+     * @param videoCodec
+     *         The codec to use for video streams (must be of type VIDEO). Set to {@code null} to ignore video streams.
+     * @param audioCodec
+     *         The codec to use for audio streams (must be of type AUDIO). Set to {@code null} to ignore audio streams.
+     * @param subsCodec
+     *         The codec to use for subtitles streams (must be of type SUBTITLES). Set to {@code null} to ignore subtitles
+     *         streams.
+     * @param output
+     *         The output {@link File} of the conversion.
+     * @param hourTimeout
+     *         Maximum amount of hours to wait for the conversion to finish.
+     *
+     * @throws IOException
+     *         Threw if an I/O error occurs during extraction
+     * @throws InterruptedException
+     *         Threw if the extraction process is interrupted
+     * @throws IllegalArgumentException
+     *         Threw if the provided codecs are not of the expected types
+     * @throws IllegalStateException
+     *         Threw if deletion of pre-existing output files fails or if ffmpeg execution fails
+     */
+    public static void convert(MediaFile media, @Nullable Codec videoCodec, @Nullable Codec audioCodec, @Nullable Codec subsCodec, File output, int hourTimeout) throws IOException, InterruptedException {
+
+        controlCodecs(videoCodec, audioCodec, subsCodec);
+
+        File parent = media.getFile().getParentFile();
+
+        Binary ffmpeg = Binary.ffmpeg();
+        ffmpeg.setBaseDir(parent);
+
+        ffmpeg.addArguments("-i", media.getFile().getName());
+
+        for (MediaStream stream : media.getStreams()) {
+
+            switch (stream.getCodec().getType()) {
+                case VIDEO:
+                    if (videoCodec == null) continue;
+                    ffmpeg.addArguments("-map", "0:%s".formatted(stream.getId()));
+                    ffmpeg.addArguments("-c:v", videoCodec.getLibName());
+                    ffmpeg.addArguments("-crf", 25);
+                    break;
+                case AUDIO:
+                    if (audioCodec == null) continue;
+
+                    ffmpeg.addArguments("-map", "0:%s".formatted(stream.getId()));
+                    ffmpeg.addArguments("-c:a", audioCodec.getLibName());
+                    break;
+                case SUBTITLE:
+                    if (subsCodec == null) continue;
+                    ffmpeg.addArguments("-map", "0:%s".formatted(stream.getId()));
+                    ffmpeg.addArguments("-c:s", subsCodec.getLibName());
+                    break;
+            }
+        }
+
+        ffmpeg.addArguments(output.getAbsolutePath());
+
+        int code = ffmpeg.execute(hourTimeout, TimeUnit.HOURS);
+
+        if (!output.exists()) {
+            throw new IllegalStateException("ffmpeg(convert) failed with code " + code);
+        }
     }
 
     /**
@@ -193,7 +300,7 @@ public final class FFMpeg {
      */
     public static File combine(MediaMeta... streams) throws IOException, InterruptedException {
 
-        File            output        = File.createTempFile("anisekai", ".mkv");
+        File            output        = java.io.File.createTempFile("anisekai", ".mkv");
         Binary          ffmpeg        = Binary.ffmpeg();
         List<MediaMeta> mediaMetaList = Arrays.asList(streams);
 
@@ -269,9 +376,6 @@ public final class FFMpeg {
 
         ffmpeg.setBaseDir(parent);
 
-        Path base     = parent.toPath();
-        Path relative = base.relativize(mpd.toPath());
-
         ffmpeg.addArguments("-i", media.getFile().getName());
 
         List<String> adaptationSets = new ArrayList<>();
@@ -289,7 +393,7 @@ public final class FFMpeg {
 
         ffmpeg.addArguments("-c", "copy");
         ffmpeg.addArguments("-adaptation_sets", String.join(" ", adaptationSets));
-        ffmpeg.addArguments(relative.toString());
+        ffmpeg.addArguments(mpd.getAbsolutePath());
 
         // Ensure output is empty or ffmpeg is going to make a whim
         for (File outputFile : output.listFiles()) {

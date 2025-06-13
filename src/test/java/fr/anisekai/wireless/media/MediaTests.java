@@ -16,9 +16,10 @@ import java.util.Map;
 @Tags({@Tag("slow-test"), @Tag("ffmpeg")})
 public class MediaTests {
 
-    public static final String TEST_DATA_DIR  = "test-data";
-    public static final String TEST_DATA_MPD  = "data";
-    public static final String TEST_DATA_FILE = "video.mkv";
+    public static final String TEST_DATA_DIR    = "test-data";
+    public static final String TEST_DATA_MPD    = "data";
+    public static final String TEST_DATA_FILE   = "video.mkv";
+    public static final String TEST_OUTPUT_FILE = "output.mkv";
 
     public static final String TEST_DATA_RES_VIDEO   = "0.mp4";
     public static final String TEST_DATA_RES_AUDIO_1 = "1.ogg";
@@ -194,9 +195,33 @@ public class MediaTests {
         Assertions.assertFalse(subs2.exists(), "Subs(2) file mismatch");
     }
 
+
+    @Order(1)
+    @Test
+    @DisplayName("ffprobe | Simple conversion (without subs)")
+    public void testSimpleConvert() {
+
+        File target = getTestFile(TEST_DATA_FILE, true);
+        File output = getTestFile(TEST_OUTPUT_FILE, false);
+
+        MediaFile media = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
+        Assertions.assertDoesNotThrow(() -> FFMpeg.convert(media, Codec.H264, Codec.AAC, null, output, 1));
+
+        MediaFile outputMedia = Assertions.assertDoesNotThrow(() -> MediaFile.of(output));
+        Assertions.assertEquals(3, outputMedia.getStreams().size(), "Streams count mismatch");
+
+        for (MediaStream stream : outputMedia.getStreams()) {
+            switch (stream.getCodec().getType()) {
+                case VIDEO -> Assertions.assertEquals(Codec.H264, stream.getCodec(), "Codec mismatch");
+                case AUDIO -> Assertions.assertEquals(Codec.AAC, stream.getCodec(), "Codec mismatch");
+            }
+        }
+    }
+
     @AfterAll
     public static void onTestFinished() {
 
+        File output    = getTestFile(TEST_OUTPUT_FILE, false);
         File video     = getTestFile(TEST_DATA_RES_VIDEO, false);
         File resAudio1 = getTestFile(TEST_DATA_RES_AUDIO_1, false);
         File resAudio2 = getTestFile(TEST_DATA_RES_AUDIO_2, false);
@@ -206,6 +231,7 @@ public class MediaTests {
         File subs2     = getTestFile(TEST_DATA_RES_SUBS_2, false);
         File mpd       = getTestFile(TEST_DATA_MPD, false);
 
+        if (output.exists()) output.delete();
         if (video.exists()) video.delete();
         if (resAudio1.exists()) resAudio1.delete();
         if (resAudio2.exists()) resAudio2.delete();
