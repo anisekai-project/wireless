@@ -1,13 +1,12 @@
 package fr.anisekai.wireless.api.services;
 
 import fr.alexpado.lib.rest.RestAction;
-import fr.alexpado.lib.rest.enums.RequestMethod;
 import fr.alexpado.lib.rest.exceptions.RestException;
 import fr.alexpado.lib.rest.interfaces.IRestAction;
-import fr.alexpado.lib.rest.interfaces.IRestResponse;
 import fr.anisekai.wireless.api.json.AnisekaiArray;
 import fr.anisekai.wireless.api.json.AnisekaiJson;
-import org.jetbrains.annotations.NotNull;
+import fr.anisekai.wireless.api.services.packets.TransmissionAuthPacket;
+import fr.anisekai.wireless.api.services.packets.TransmissionCustomPacket;
 
 import java.util.*;
 
@@ -187,6 +186,43 @@ public class Transmission {
     }
 
     /**
+     * Send the provided {@link RestAction} toward the transmission daemon RPC API.
+     *
+     * @param action
+     *         The {@link RestAction} to execute.
+     *
+     * @return The query result.
+     */
+    private AnisekaiJson send(IRestAction<AnisekaiJson> action) throws Exception {
+
+        if (this.sessionId == null) {
+            try {
+                new TransmissionAuthPacket(this.endpoint).complete();
+            } catch (RestException e) {
+                if (e.getCode() == 409) {
+                    this.sessionId = e.getHeaders().getOrDefault("X-Transmission-Session-Id", null);
+                }
+
+                if (this.sessionId == null) {
+                    throw new IllegalStateException("Could not authenticate to Transmission RPC API.", e);
+                }
+            }
+        }
+
+        try {
+            return action.complete();
+        } catch (RestException e) {
+            if (e.getCode() == 409) {
+                // Retry with auto-auth enabled
+                this.sessionId = null;
+                return this.send(action);
+            }
+
+            throw e; // We are not supposed to handle this case
+        }
+    }
+
+    /**
      * Send the provided {@link AnisekaiJson} to the transmission daemon server.
      *
      * @param data
@@ -199,60 +235,7 @@ public class Transmission {
      */
     private AnisekaiJson sendPacket(AnisekaiJson data) throws Exception {
 
-        boolean isSessionCall = data.getString("method").equals("session-get");
-
-        IRestAction<AnisekaiJson> action = new RestAction<>() {
-
-            @Override
-            public @NotNull RequestMethod getRequestMethod() {
-
-                return RequestMethod.POST;
-            }
-
-            @Override
-            public @NotNull String getRequestURL() {
-
-                return Transmission.this.endpoint;
-            }
-
-            @Override
-            public @NotNull Map<String, String> getRequestHeaders() {
-
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Content-Type", "application/json");
-                Transmission.this.getSessionId().ifPresent(id -> headers.put("X-Transmission-Session-Id", id));
-
-                return headers;
-            }
-
-            @Override
-            public @NotNull String getRequestBody() {
-
-                return data.toString();
-            }
-
-            @Override
-            public AnisekaiJson convert(IRestResponse response) {
-
-                return new AnisekaiJson(new String(response.getBody()));
-            }
-        };
-
-        try {
-            return action.complete();
-        } catch (RestException e) {
-            if (e.getCode() == 409 && !isSessionCall) {
-                this.sessionId = null;
-            } else if (e.getCode() == 409 && this.getSessionId().isEmpty() && isSessionCall) {
-                this.sessionId = e.getHeaders().getOrDefault("X-Transmission-Session-Id", null);
-
-                if (this.getSessionId().isPresent()) {
-                    return action.complete();
-                }
-            }
-
-            throw e;
-        }
+        return this.send(new TransmissionCustomPacket(this.endpoint, () -> this.sessionId, data));
     }
 
     /**
@@ -283,10 +266,6 @@ public class Transmission {
      *         Thrown if the response indicate a failure or if the response was not parsable.
      */
     public List<Torrent> query(Collection<String> hashes) throws Exception {
-
-        if (this.getSessionId().isEmpty()) {
-            this.getSession();
-        }
 
         AnisekaiJson packetData = new AnisekaiJson();
         packetData.put("method", "torrent-get");
@@ -352,10 +331,6 @@ public class Transmission {
      */
     public Torrent download(Nyaa.Entry entry, boolean paused) throws Exception {
 
-        if (this.getSessionId().isEmpty()) {
-            this.getSession();
-        }
-
         AnisekaiJson packetData = new AnisekaiJson();
         packetData.put("method", "torrent-add");
         packetData.put("arguments.paused", paused);
@@ -398,14 +373,6 @@ public class Transmission {
      */
     public Torrent start(Torrent torrent) throws Exception {
 
-        if (torrent.status() != TorrentStatus.STOPPED) {
-            throw new IllegalStateException("Torrent with hash " + torrent.hash() + " already started");
-        }
-
-        if (this.getSessionId().isEmpty()) {
-            this.getSession();
-        }
-
         AnisekaiJson packetData = new AnisekaiJson();
         packetData.put("method", "torrent-start");
         packetData.put("arguments.ids", Collections.singleton(torrent.hash()));
@@ -432,14 +399,6 @@ public class Transmission {
      *         Thrown if the response indicate a failure or if the response was not parsable.
      */
     public void delete(Torrent torrent) throws Exception {
-
-        if (torrent.status() != TorrentStatus.STOPPED) {
-            throw new IllegalStateException("Torrent with hash " + torrent.hash() + " already started");
-        }
-
-        if (this.getSessionId().isEmpty()) {
-            this.getSession();
-        }
 
         AnisekaiJson packetData = new AnisekaiJson();
         packetData.put("method", "torrent-remove");
