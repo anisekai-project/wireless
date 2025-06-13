@@ -135,4 +135,41 @@ public enum Codec {
         }
         return null;
     }
+
+    /**
+     * Retrieve the mimeType associated to the current {@link Codec}.
+
+     * @return The mimeType
+     */
+    public String getMimeType() {
+
+        return switch (this) {
+            case VIDEO_COPY, AUDIO_COPY ->
+                    throw new UnsupportedOperationException("Copy codec are just flags and cannot have a mime type");
+
+            // Video
+            case H264, H265, MPEG2, PRORES, DV -> "video/mp4";
+            case VP9, AV1 -> "video/webm";
+
+            // Audio
+            case AAC, ALAC -> "audio/mp4";
+            case MP3 -> "audio/mpeg";
+            case OPUS, VORBIS -> "audio/ogg";
+            case FLAC -> "audio/flac";
+            case AC3 -> "audio/ac3";
+            case EAC3 -> "audio/eac3";
+            case DTS -> "audio/vnd.dts";
+            case TRUEHD -> "audio/mlp";
+            case WAV -> "audio/wav";
+
+            // Subtitle
+
+            case SRT -> "application/x-subrip";
+            case ASS, SSA -> "text/x-ssa";
+            case PGS -> "application/pgs";
+            case DVB_SUB -> "application/dvbsubs";
+            case VTT -> "text/vtt";
+            case MOV_TEXT -> "application/mp4";
+        };
+    }
 }
