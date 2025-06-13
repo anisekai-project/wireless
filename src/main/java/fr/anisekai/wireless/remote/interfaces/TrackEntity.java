@@ -45,6 +45,21 @@ public interface TrackEntity<E extends EpisodeEntity<?>> extends Entity<Long> {
     void setName(@NotNull String name);
 
     /**
+     * Retrieve this {@link TrackEntity}'s label.
+     *
+     * @return A label
+     */
+    String getLabel();
+
+    /**
+     * Define this {@link TrackEntity}'s label.
+     *
+     * @param label
+     *         A label
+     */
+    void setLabel(@NotNull String label);
+
+    /**
      * Retrieve this {@link TrackEntity}'s {@link Codec}.
      *
      * @return A {@link Codec}.
