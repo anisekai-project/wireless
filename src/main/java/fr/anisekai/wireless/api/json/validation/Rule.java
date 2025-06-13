@@ -37,6 +37,14 @@ public abstract class Rule implements JsonRule {
         this.required = required;
     }
 
+    /**
+     * Retrieve an optional object from the provided {@link AnisekaiJson} using this {@link Rule#getKey()}.
+     *
+     * @param source
+     *         Source from which the object should be retrieved.
+     *
+     * @return An optional object
+     */
     protected Optional<Object> retrieve(AnisekaiJson source) {
 
         Optional<Object> optional = source.getOptional(this.getKey());
@@ -51,6 +59,20 @@ public abstract class Rule implements JsonRule {
         return optional;
     }
 
+    /**
+     * Retrieve the provided object as an {@link AnisekaiArray}
+     *
+     * @param o
+     *         The object
+     * @param allowEmpty
+     *         True if the {@link AnisekaiArray} can be empty.
+     *
+     * @return The {@link AnisekaiArray}
+     *
+     * @throws JSONException
+     *         Threw if the provided object could not be retrieved as an {@link AnisekaiArray} or was empty when
+     *         {@code allowEmpty} was set to false.
+     */
     protected AnisekaiArray asArray(Object o, boolean allowEmpty) {
 
         AnisekaiArray array = switch (o) {
@@ -69,6 +91,19 @@ public abstract class Rule implements JsonRule {
         return array;
     }
 
+    /**
+     * Retrieve the provided object as {@link AnisekaiJson}.
+     *
+     * @param o
+     *         The object
+     * @param index
+     *         Index at which the object was encountered. Used only for error message purpose.
+     *
+     * @return The {@link AnisekaiJson}.
+     *
+     * @throws JSONException
+     *         Threw if the provided object could not be retrieved as an {@link AnisekaiJson}.
+     */
     protected AnisekaiJson asObject(Object o, int index) {
 
         return switch (o) {

@@ -29,6 +29,8 @@ public class MediaMeta {
      *
      * @param file
      *         The media file.
+     * @param type
+     *         The {@link CodecType} for this {@link MediaMeta}.
      * @param name
      *         The name of the track.
      * @param language
