@@ -178,14 +178,6 @@ public class Transmission {
     }
 
     /**
-     * @return An optional session id for authenticating with transmission daemon server.
-     */
-    private Optional<String> getSessionId() {
-
-        return Optional.ofNullable(this.sessionId);
-    }
-
-    /**
      * Send the provided {@link RestAction} toward the transmission daemon RPC API.
      *
      * @param action
