@@ -1,5 +1,7 @@
 package fr.anisekai.wireless.api.media.enums;
 
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Represents the type of codec: video, audio, or subtitle.
  * <p>
@@ -10,33 +12,30 @@ public enum CodecType {
     /**
      * Codec type used for video tracks.
      */
-    VIDEO('v'),
+    VIDEO,
 
     /**
      * Codec type used for audio tracks.
      */
-    AUDIO('a'),
+    AUDIO,
 
     /**
      * Codec type used for subtitle tracks.
      */
-    SUBTITLE('s');
-
-    private final char typeChar;
-
-    CodecType(char typeChar) {
-
-        this.typeChar = typeChar;
-    }
+    SUBTITLE;
 
     /**
      * Returns the character used by ffmpeg to identify this codec type.
      *
      * @return The character representing this codec type
      */
-    public char getTypeChar() {
+    public char getChar() {
 
-        return this.typeChar;
+        return switch (this) {
+            case VIDEO -> 'v';
+            case AUDIO -> 'a';
+            case SUBTITLE -> 's';
+        };
     }
 
     /**
@@ -47,7 +46,7 @@ public enum CodecType {
      *
      * @return The matching {@link CodecType}, or {@code null} if no match is found
      */
-    public static CodecType fromString(String codecTypeName) {
+    public static @Nullable CodecType from(String codecTypeName) {
 
         for (CodecType type : CodecType.values()) {
             if (type.name().equalsIgnoreCase(codecTypeName)) {

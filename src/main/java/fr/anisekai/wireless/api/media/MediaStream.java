@@ -1,53 +1,95 @@
 package fr.anisekai.wireless.api.media;
 
 import fr.anisekai.wireless.api.media.enums.Codec;
+import fr.anisekai.wireless.api.media.enums.Disposition;
+import org.json.JSONObject;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a single media stream extracted from a container file.
- * <p>
- * Each stream has an index (as recognized by ffmpeg), a codec type, and an optional language tag. This is used for identifying,
- * processing, and outputting individual media tracks.
- *
- * @param index
- *         The stream index within the container.
- * @param codec
- *         The codec used for this stream.
- * @param language
- *         The ISO 639-1/2 language code, or {@code null} if unspecified.
  */
-public record MediaStream(int index, Codec codec, String language) {
+public class MediaStream {
+
+    private final int                 id;
+    private final Codec               codec;
+    private final List<Disposition>   dispositions;
+    private final Map<String, String> metadata;
 
     /**
-     * Generates a {@link File} representing this stream's output path using its own codec's extension.
+     * Create a new instance of {@link MediaStream}.
      *
-     * @param root
-     *         The root directory for the output file.
-     *
-     * @return A {@link File} named with the stream index and its codec's extension (e.g., {@code 0.aac}).
+     * @param codec
+     *         The {@link Codec} for this {@link MediaStream}.
+     * @param json
+     *         The {@link JSONObject} containing a {@link MediaStream} data.
      */
-    public File asFile(File root) {
+    public MediaStream(Codec codec, JSONObject json) {
 
-        return new File(root, "%s.%s".formatted(this.index, this.codec.getExtension()));
+        this.id           = json.getInt("index");
+        this.codec        = codec;
+        this.dispositions = new ArrayList<>();
+        this.metadata     = new HashMap<>();
+
+        JSONObject dispositionJson = json.getJSONObject("disposition");
+
+        for (String key : dispositionJson.keySet()) {
+            Disposition disposition = Disposition.from(key);
+            if (disposition != null) {
+                this.dispositions.add(disposition);
+            }
+        }
+
+        JSONObject tagsJson = json.getJSONObject("tags");
+
+        for (String key : tagsJson.keySet()) {
+            this.metadata.put(key, tagsJson.getString(key));
+        }
+
     }
 
     /**
-     * Generates a {@link File} representing this stream's output path using a custom codec's extension.
+     * Retrieve this {@link MediaStream}'s ID
      *
-     * @param root
-     *         The root directory for the output file.
-     * @param override
-     *         The codec whose extension should be used for the output file.
-     *
-     * @return A {@link File} named with the stream index and the given codec's extension.
+     * @return An id
      */
-    public File asFile(File root, Codec override) {
+    public int getId() {
 
-        if (override.getLibName().equals("copy")) {
-            return this.asFile(root);
-        }
-        return new File(root, "%s.%s".formatted(this.index, override.getExtension()));
+        return this.id;
+    }
+
+    /**
+     * Retrieve this {@link MediaStream}'s ID
+     *
+     * @return A {@link Codec}
+     */
+    public Codec getCodec() {
+
+        return this.codec;
+    }
+
+    /**
+     * Retrieve this {@link MediaStream}'s {@link List} of {@link Disposition}s.
+     *
+     * @return A {@link List} of {@link Disposition}s.
+     */
+    public List<Disposition> getDispositions() {
+
+        return this.dispositions;
+    }
+
+    /**
+     * Retrieve this {@link MediaStream} metadata.
+     *
+     * @return A {@link Map}.
+     */
+    public Map<String, String> getMetadata() {
+
+        return this.metadata;
     }
 
 }

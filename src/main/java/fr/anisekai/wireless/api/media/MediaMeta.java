@@ -2,9 +2,14 @@ package fr.anisekai.wireless.api.media;
 
 import fr.anisekai.wireless.api.media.bin.FFMpeg;
 import fr.anisekai.wireless.api.media.enums.Codec;
+import fr.anisekai.wireless.api.media.enums.CodecType;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a single media track (such as audio, video, or subtitle) used to reassemble a complete media file.
@@ -14,11 +19,10 @@ import java.io.File;
  */
 public class MediaMeta {
 
-
-    private final File   file;
-    private final String name;
-    private final String language;
-    private final Codec  codec;
+    private final File                file;
+    private final CodecType           type;
+    private final Map<String, String> metadata;
+    private final List<String>        dispositions;
 
     /**
      * Create a {@link MediaMeta} instance for a given media file with optional metadata.
@@ -33,15 +37,19 @@ public class MediaMeta {
      * @throws IllegalArgumentException
      *         Threw if the codec cannot be determined from the file extension.
      */
-    public MediaMeta(File file, @Nullable String name, @Nullable String language) {
+    public MediaMeta(File file, CodecType type, @Nullable String name, @Nullable String language) {
 
-        this.file     = file;
-        this.name     = name;
-        this.language = language;
-        this.codec    = Codec.fromExtension(file);
+        this.file         = file;
+        this.type         = type;
+        this.metadata     = new HashMap<>();
+        this.dispositions = new ArrayList<>();
 
-        if (this.codec == null) {
-            throw new IllegalArgumentException("Couldn't find codec for " + file);
+        if (name != null) {
+            this.metadata.put("title", name);
+        }
+
+        if (language != null) {
+            this.metadata.put("language", language);
         }
     }
 
@@ -56,33 +64,33 @@ public class MediaMeta {
     }
 
     /**
-     * Retrieve the name of the media track, or {@code null} if unspecified.
+     * Retrieve the metadata associated to this {@link MediaMeta}.
      *
-     * @return The name of the track.
+     * @return A map
      */
-    public String getName() {
+    public Map<String, String> getMetadata() {
 
-        return this.name;
+        return this.metadata;
     }
 
     /**
-     * Retrieve the language of the media track, or {@code null} if unspecified.
+     * Retrieve the disposition associated to this {@link MediaMeta}.
      *
-     * @return The language of the track.
+     * @return A map
      */
-    public String getLanguage() {
+    public List<String> getDispositions() {
 
-        return this.language;
+        return this.dispositions;
     }
 
     /**
-     * Retrieve the codec detected for this media track based on its file extension.
+     * Retrieve the codec type for this media track.
      *
-     * @return The {@link Codec} used for this track.
+     * @return The {@link CodecType} used for this track.
      */
-    public Codec getCodec() {
+    public CodecType getCodecType() {
 
-        return this.codec;
+        return this.type;
     }
 
 }

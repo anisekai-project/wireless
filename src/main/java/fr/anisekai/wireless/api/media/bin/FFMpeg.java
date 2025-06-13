@@ -6,6 +6,7 @@ import fr.anisekai.wireless.api.media.MediaMeta;
 import fr.anisekai.wireless.api.media.MediaStream;
 import fr.anisekai.wireless.api.media.enums.Codec;
 import fr.anisekai.wireless.api.media.enums.CodecType;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,15 +64,19 @@ public final class FFMpeg {
     }
 
     /**
-     * Extracts individual streams from the given media file into separate files using specified video and audio codecs. Subtitles
-     * streams are copied without re-encoding.
+     * Extracts individual streams from the given media file into separate files using specified codecs.
      *
      * @param media
      *         The media file containing streams to extract
      * @param videoCodec
-     *         The codec to use for video streams (must be of type VIDEO)
+     *         The codec to use for video streams (must be of type VIDEO). Set to {@code null} to ignore video streams.
      * @param audioCodec
-     *         The codec to use for audio streams (must be of type AUDIO)
+     *         The codec to use for audio streams (must be of type AUDIO). Set to {@code null} to ignore audio streams.
+     * @param subsCodec
+     *         The codec to use for subtitles streams (must be of type SUBTITLES). Set to {@code null} to ignore subtitles
+     *         streams.
+     * @param hourTimeout
+     *         Maximum amount of hours to wait for the conversion to finish.
      *
      * @return A {@link List} of {@link File} representing the extracted streams
      *
@@ -85,10 +90,19 @@ public final class FFMpeg {
      *         Threw if deletion of pre-existing output files fails or if ffmpeg execution fails
      */
 
-    public static Map<MediaStream, File> explode(MediaFile media, Codec videoCodec, Codec audioCodec) throws IOException, InterruptedException {
+    public static Map<MediaStream, File> explode(MediaFile media, @Nullable Codec videoCodec, @Nullable Codec audioCodec, @Nullable Codec subsCodec, int hourTimeout) throws IOException, InterruptedException {
 
-        if (videoCodec.getType() != CodecType.VIDEO) throw new IllegalArgumentException("video codec must be of type video");
-        if (audioCodec.getType() != CodecType.AUDIO) throw new IllegalArgumentException("audio codec must be of type audio");
+        if (videoCodec != null && videoCodec.getType() != CodecType.VIDEO) {
+            throw new IllegalArgumentException("video codec must be of type video");
+        }
+
+        if (audioCodec != null && audioCodec.getType() != CodecType.AUDIO) {
+            throw new IllegalArgumentException("audio codec must be of type audio");
+        }
+
+        if (subsCodec != null && subsCodec.getType() != CodecType.SUBTITLE) {
+            throw new IllegalArgumentException("subtitles codec must be of type subtitles");
+        }
 
         File                   parent      = media.getFile().getParentFile();
         Map<MediaStream, File> outputFiles = new HashMap<>();
@@ -99,32 +113,53 @@ public final class FFMpeg {
         ffmpeg.addArguments("-i", media.getFile().getName());
 
         for (MediaStream stream : media.getStreams()) {
-            ffmpeg.addArguments("-map", "0:%s".formatted(stream.index()));
 
-            switch (stream.codec().getType()) {
+            switch (stream.getCodec().getType()) {
                 case VIDEO:
+                    if (videoCodec == null) continue;
+
+                    ffmpeg.addArguments("-map", "0:%s".formatted(stream.getId()));
                     ffmpeg.addArguments("-c:v", videoCodec.getLibName());
                     ffmpeg.addArguments("-crf", 25);
-                    File videoOutput = stream.asFile(parent, videoCodec);
+
+                    String videoExt = videoCodec.isCopyCodec() ? stream.getCodec().getExtension() : videoCodec.getExtension();
+                    String videoName = "%s.%s".formatted(stream.getId(), videoExt);
+                    File videoOutput = new File(parent, videoName);
+
                     ffmpeg.addArgument(videoOutput.getName());
                     outputFiles.put(stream, videoOutput);
                     break;
                 case AUDIO:
+                    if (audioCodec == null) continue;
+
+                    ffmpeg.addArguments("-map", "0:%s".formatted(stream.getId()));
                     ffmpeg.addArguments("-c:a", audioCodec.getLibName());
-                    File audioOutput = stream.asFile(parent, audioCodec);
+
+                    String audioExt = audioCodec.isCopyCodec() ? stream.getCodec().getExtension() : audioCodec.getExtension();
+                    String audioName = "%s.%s".formatted(stream.getId(), audioExt);
+                    File audioOutput = new File(parent, audioName);
+
                     ffmpeg.addArgument(audioOutput.getName());
                     outputFiles.put(stream, audioOutput);
                     break;
                 case SUBTITLE:
+                    if (subsCodec == null) continue;
+
+                    ffmpeg.addArguments("-map", "0:%s".formatted(stream.getId()));
                     ffmpeg.addArguments("-c:s", "copy");
-                    File subtitleOutput = stream.asFile(parent);
-                    ffmpeg.addArgument(subtitleOutput.getName());
-                    outputFiles.put(stream, subtitleOutput);
+
+                    String subsExt = subsCodec.isCopyCodec() ? stream.getCodec().getExtension() : subsCodec.getExtension();
+                    String subsName = "%s.%s".formatted(stream.getId(), subsExt);
+                    File subsOutput = new File(parent, subsName);
+
+                    ffmpeg.addArgument(subsOutput.getName());
+                    outputFiles.put(stream, subsOutput);
                     break;
             }
 
         }
 
+        // Ensure outputs do not exist or ffmpeg is going to make a whim
         for (File outputFile : outputFiles.values()) {
             if (outputFile.exists()) {
                 if (!outputFile.delete()) {
@@ -133,7 +168,7 @@ public final class FFMpeg {
             }
         }
 
-        int code = ffmpeg.execute(1, TimeUnit.HOURS);
+        int code = ffmpeg.execute(hourTimeout, TimeUnit.HOURS);
         if (!outputFiles.values().stream().allMatch(File::exists)) {
             throw new IllegalStateException("ffmpeg(convert) failed with code " + code);
         }
@@ -168,31 +203,24 @@ public final class FFMpeg {
 
         ffmpeg.setBaseDir(workingDirectory);
 
-        Map<Character, Integer> streamTypes = new HashMap<>();
-        streamTypes.put('v', 1);
-        streamTypes.put('a', 1);
-        streamTypes.put('s', 1);
+        Map<CodecType, Integer> streamTypes = new HashMap<>();
+        streamTypes.put(CodecType.VIDEO, 1);
+        streamTypes.put(CodecType.AUDIO, 1);
+        streamTypes.put(CodecType.SUBTITLE, 1);
 
         for (int i = 0; i < mediaMetaList.size(); i++) {
-            MediaMeta mediaMeta    = mediaMetaList.get(i);
-            Path      mediaPath    = workingPath.relativize(mediaMeta.getFile().toPath());
-            char      typeChar     = mediaMeta.getCodec().getType().getTypeChar();
-            int       trackTypeNum = streamTypes.get(typeChar);
+            MediaMeta mediaMeta = mediaMetaList.get(i);
+            Path      mediaPath = workingPath.relativize(mediaMeta.getFile().toPath());
+            CodecType type      = mediaMeta.getCodecType();
 
-            streamTypes.put(typeChar, trackTypeNum + 1);
+            streamTypes.compute(type, (k, trackTypeNum) -> trackTypeNum + 1);
 
             ffmpeg.addArguments("-i", mediaPath.toString());
+            ffmpeg.addHoldArguments("-map", "%s:%s".formatted(i, type.getChar()));
 
-            ffmpeg.addHoldArguments("-map", "%s:%s".formatted(i, typeChar));
-
-            if (mediaMeta.getName() != null) {
-                ffmpeg.addHoldArguments("-metadata:s:%s".formatted(i), "title=%s".formatted(mediaMeta.getName()));
-            } else {
-                ffmpeg.addHoldArguments("-metadata:s:%s".formatted(i), "title=Track %s".formatted(trackTypeNum));
-            }
-
-            if (mediaMeta.getLanguage() != null) {
-                ffmpeg.addHoldArguments("-metadata:s:%s".formatted(i), "language=%s".formatted(mediaMeta.getLanguage()));
+            for (String key : mediaMeta.getMetadata().keySet()) {
+                String value = mediaMeta.getMetadata().get(key);
+                ffmpeg.addHoldArguments("-metadata:s:%s".formatted(i), "%s=%s".formatted(key, value));
             }
         }
 
@@ -213,6 +241,68 @@ public final class FFMpeg {
         }
 
         return output;
+    }
+
+    /**
+     * Create an MPD meta file for the specified tracks.
+     *
+     * @param media
+     *         The {@link MediaFile} for which the MPD metadata should be created.
+     * @param output
+     *         Directory into which the MPD and all the chunks will be generated.
+     *
+     * @return The MPD file.
+     *
+     * @throws IOException
+     *         Threw if an I/O error occurs during processing or output file deletion
+     * @throws InterruptedException
+     *         Threw if the generation process is interrupted
+     * @throws IllegalStateException
+     *         Threw if ffmpeg fails to produce the output file
+     */
+    public static File createMpd(MediaFile media, File output) throws IOException, InterruptedException {
+
+        File   mpd    = new File(output, "meta.mpd");
+        Binary ffmpeg = Binary.ffmpeg();
+
+        File parent = media.getFile().getParentFile();
+
+        ffmpeg.setBaseDir(parent);
+
+        Path base     = parent.toPath();
+        Path relative = base.relativize(mpd.toPath());
+
+        ffmpeg.addArguments("-i", media.getFile().getName());
+
+        List<String> adaptationSets = new ArrayList<>();
+
+        int id = 0;
+        for (MediaStream stream : media.getStreams()) {
+            switch (stream.getCodec().getType()) {
+                case VIDEO, AUDIO:
+                    ffmpeg.addArguments("-map", "0:%s".formatted(stream.getId()));
+                    adaptationSets.add("id=%s,streams=%s".formatted(id, stream.getId()));
+                    id++;
+                    break;
+            }
+        }
+
+        ffmpeg.addArguments("-c", "copy");
+        ffmpeg.addArguments("-adaptation_sets", String.join(" ", adaptationSets));
+        ffmpeg.addArguments(relative.toString());
+
+        // Ensure output is empty or ffmpeg is going to make a whim
+        for (File outputFile : output.listFiles()) {
+            if (!outputFile.delete()) {
+                throw new IllegalStateException("Could not delete " + outputFile.getAbsolutePath());
+            }
+        }
+
+        int code = ffmpeg.execute(1, TimeUnit.HOURS);
+        if (!mpd.exists()) {
+            throw new IllegalStateException("ffmpeg(convert) failed with code " + code);
+        }
+        return mpd;
     }
 
 }

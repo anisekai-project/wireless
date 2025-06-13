@@ -43,16 +43,14 @@ public final class MediaFile {
         for (int i = 0; i < streamArray.length(); i++) {
             AnisekaiJson streamData = streamArray.getAnisekaiJson(i);
 
-            CodecType type = CodecType.fromString(streamData.getString("codec_type"));
+            CodecType type = CodecType.from(streamData.getString("codec_type"));
             if (type == null) continue; // Unsupported type of stream, just skip it.
-            Codec codec = Codec.fromString(streamData.getString("codec_name"));
+            Codec codec = Codec.from(streamData.getString("codec_name"));
             if (codec == null) {
                 throw new UnsupportedEncodingException("Unsupported codec: " + streamData.getString("codec_name"));
             }
 
-            int index = streamData.getInt("index");
-
-            MediaStream stream = new MediaStream(index, codec, streamData.getOptionalString("tags.language").orElse(null));
+            MediaStream stream = new MediaStream(codec, streamData);
             streams.add(stream);
         }
 
@@ -98,7 +96,7 @@ public final class MediaFile {
      */
     public Set<MediaStream> getStreams(CodecType type) {
 
-        return this.streams.stream().filter(stream -> stream.codec().getType() == type).collect(Collectors.toSet());
+        return this.streams.stream().filter(stream -> stream.getCodec().getType() == type).collect(Collectors.toSet());
     }
 
 }

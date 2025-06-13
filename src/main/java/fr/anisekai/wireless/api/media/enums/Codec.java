@@ -1,8 +1,6 @@
 package fr.anisekai.wireless.api.media.enums;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Represents various multimedia codecs used for video, audio, and subtitle encoding/decoding.
@@ -11,48 +9,108 @@ import java.io.File;
  */
 public enum Codec {
 
-    // Video Codecs
-    @SuppressWarnings("MissingJavadoc") H264(CodecType.VIDEO, "mp4", "libx264"),
-    @SuppressWarnings("MissingJavadoc") H265(CodecType.VIDEO, "mp4", "libx265"),
-    @SuppressWarnings("MissingJavadoc") VP9(CodecType.VIDEO, "webm", "libvpx-vp9"),
-    @SuppressWarnings("MissingJavadoc") AV1(CodecType.VIDEO, "mkv", "libaom-av1"),
-    @SuppressWarnings("MissingJavadoc") MPEG2(CodecType.VIDEO, "mpg", "mpeg2video"),
-    @SuppressWarnings("MissingJavadoc") PRORES(CodecType.VIDEO, "mov", "prores_ks"),
-    @SuppressWarnings("MissingJavadoc") DV(CodecType.VIDEO, "dv", "dvvideo"),
-    @SuppressWarnings("MissingJavadoc") VIDEO_COPY(CodecType.VIDEO, null, "copy"),
+    // <editor-fold desc="Video Codecs">
+    /**
+     * H264 Video Codec
+     */
+    H264(CodecType.VIDEO),
+    /**
+     * H265 Video Codec
+     */
+    H265(CodecType.VIDEO),
+    /**
+     * VP9 Video Codec
+     */
+    VP9(CodecType.VIDEO),
+    /**
+     * AV1 Video Codec
+     */
+    AV1(CodecType.VIDEO),
+    /**
+     * Special codec meant to be used with ffmpeg to copy the input without conversion.
+     */
+    VIDEO_COPY(CodecType.VIDEO),
+    // </editor-fold>
 
-    // Audio Codecs
-    @SuppressWarnings("MissingJavadoc") AAC(CodecType.AUDIO, "m4a", "aac"),
-    @SuppressWarnings("MissingJavadoc") MP3(CodecType.AUDIO, "mp3", "libmp3lame"),
-    @SuppressWarnings("MissingJavadoc") OPUS(CodecType.AUDIO, "ogg", "libopus"),
-    @SuppressWarnings("MissingJavadoc") VORBIS(CodecType.AUDIO, "ogg", "libvorbis"),
-    @SuppressWarnings("MissingJavadoc") FLAC(CodecType.AUDIO, "flac", "flac"),
-    @SuppressWarnings("MissingJavadoc") AC3(CodecType.AUDIO, "ac3", "ac3"),
-    @SuppressWarnings("MissingJavadoc") EAC3(CodecType.AUDIO, "eac3", "eac3"),
-    @SuppressWarnings("MissingJavadoc") DTS(CodecType.AUDIO, "dts", "libdts"),
-    @SuppressWarnings("MissingJavadoc") TRUEHD(CodecType.AUDIO, "mlp", "truehd"),
-    @SuppressWarnings("MissingJavadoc") ALAC(CodecType.AUDIO, "m4a", "alac"),
-    @SuppressWarnings("MissingJavadoc") WAV(CodecType.AUDIO, "wav", "pcm_s16le"),
-    @SuppressWarnings("MissingJavadoc") AUDIO_COPY(CodecType.AUDIO, null, "copy"),
+    // <editor-fold desc="Audio Codecs">
+    /**
+     * AAC Audio Codec
+     */
+    AAC(CodecType.AUDIO),
+    /**
+     * MP3 Audio Codec
+     */
+    MP3(CodecType.AUDIO),
+    /**
+     * OPUS Audio Codec
+     */
+    OPUS(CodecType.AUDIO),
+    /**
+     * VORBIS Audio Codec
+     */
+    VORBIS(CodecType.AUDIO),
+    /**
+     * FLAC Audio Codec
+     */
+    FLAC(CodecType.AUDIO),
+    /**
+     * AC3 Audio Codec
+     */
+    AC3(CodecType.AUDIO),
+    /**
+     * EAC3 Audio Codec
+     */
+    EAC3(CodecType.AUDIO),
+    /**
+     * DTS Audio Codec
+     */
+    DTS(CodecType.AUDIO),
+    /**
+     * TRUEHD Audio Codec
+     */
+    TRUEHD(CodecType.AUDIO),
+    /**
+     * ALAC Audio Codec
+     */
+    ALAC(CodecType.AUDIO),
+    /**
+     * Special codec meant to be used with ffmpeg to copy the input without conversion.
+     */
+    AUDIO_COPY(CodecType.AUDIO),
+    // </editor-fold>
 
-    // Subtitle Codecs
-    @SuppressWarnings("MissingJavadoc") SRT(CodecType.SUBTITLE, "srt", "srt"),
-    @SuppressWarnings("MissingJavadoc") ASS(CodecType.SUBTITLE, "ass", "ass"),
-    @SuppressWarnings("MissingJavadoc") PGS(CodecType.SUBTITLE, "sup", "pgssub"),
-    @SuppressWarnings("MissingJavadoc") VTT(CodecType.SUBTITLE, "vtt", "webvtt"),
-    @SuppressWarnings("MissingJavadoc") DVB_SUB(CodecType.SUBTITLE, "sub", "dvbsub"),
-    @SuppressWarnings("MissingJavadoc") MOV_TEXT(CodecType.SUBTITLE, "mov_text", "mov_text"),
-    @SuppressWarnings("MissingJavadoc") SSA(CodecType.SUBTITLE, "ssa", "ssa");
+    // <editor-fold desc="Subtitles Codecs">
+    /**
+     * SRT Subtitles Codec
+     */
+    SRT(CodecType.SUBTITLE),
+    /**
+     * ASS Subtitles Codec
+     */
+    ASS(CodecType.SUBTITLE),
+    /**
+     * PGS Subtitles Codec
+     */
+    PGS(CodecType.SUBTITLE),
+    /**
+     * DVB_SUB Subtitles Codec
+     */
+    DVB_SUB(CodecType.SUBTITLE),
+    /**
+     * SSA Subtitles Codec
+     */
+    SSA(CodecType.SUBTITLE),
+    /**
+     * Special codec meant to be used with ffmpeg to copy the input without conversion.
+     */
+    SUBTITLES_COPY(CodecType.SUBTITLE);
+    // </editor-fold>
 
     private final CodecType type;
-    private final String    extension;
-    private final String    libName;
 
-    Codec(CodecType type, String extension, String libName) {
+    Codec(CodecType type) {
 
-        this.type      = type;
-        this.extension = extension;
-        this.libName   = libName;
+        this.type = type;
     }
 
     /**
@@ -72,7 +130,26 @@ public enum Codec {
      */
     public String getExtension() {
 
-        return this.extension;
+        return switch (this) {
+            case H264, H265 -> "mp4";
+            case VP9 -> "webm";
+            case AV1 -> "mkv";
+            case AAC, ALAC -> "m4a";
+            case MP3 -> "mp3";
+            case OPUS, VORBIS -> "ogg";
+            case FLAC -> "flac";
+            case AC3 -> "ac3";
+            case EAC3 -> "eac3";
+            case DTS -> "dts";
+            case TRUEHD -> "mlp";
+            case SRT -> "srt";
+            case ASS -> "ass";
+            case PGS -> "sup";
+            case DVB_SUB -> "sub";
+            case SSA -> "ssa";
+            case AUDIO_COPY, VIDEO_COPY, SUBTITLES_COPY ->
+                    throw new IllegalStateException("*_COPY codecs are special codec and thus does not support file extensions");
+        };
     }
 
     /**
@@ -83,7 +160,28 @@ public enum Codec {
 
     public String getLibName() {
 
-        return this.libName;
+        return switch (this) {
+            case H264 -> "libx264";
+            case H265 -> "libx265";
+            case VP9 -> "libvpx-vp9";
+            case AV1 -> "libaom-av1";
+            case AAC -> "aac";
+            case MP3 -> "libmp3lame";
+            case OPUS -> "libopus";
+            case VORBIS -> "libvorbis";
+            case FLAC -> "flac";
+            case AC3 -> "ac3";
+            case EAC3 -> "eac3";
+            case DTS -> "libdts";
+            case TRUEHD -> "truedts";
+            case ALAC -> "alac";
+            case SRT -> "srt";
+            case ASS -> "ass";
+            case PGS -> "pgssub";
+            case DVB_SUB -> "dvbsub";
+            case SSA -> "ssa";
+            case VIDEO_COPY, AUDIO_COPY, SUBTITLES_COPY -> "copy";
+        };
     }
 
     /**
@@ -94,7 +192,7 @@ public enum Codec {
      *
      * @return The matching {@link Codec}, or {@code null} if no match is found
      */
-    public static Codec fromString(String codecName) {
+    public static @Nullable Codec from(String codecName) {
 
         for (Codec codec : values()) {
             if (codec.name().equalsIgnoreCase(codecName)) {
@@ -105,53 +203,15 @@ public enum Codec {
     }
 
     /**
-     * Attempts to resolve a {@link Codec} based on the extension of the given file.
-     *
-     * @param file
-     *         The file whose extension will be used for matching
-     *
-     * @return The matching {@link Codec}, or {@code null} if no match is found
-     */
-    public static Codec fromExtension(File file) {
-
-        String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
-        return fromExtension(extension);
-    }
-
-    /**
-     * Attempts to resolve a {@link Codec} based on a file extension.
-     *
-     * @param extension
-     *         The file extension to match (e.g., "mp4", "ogg")
-     *
-     * @return The matching {@link Codec}, or {@code null} if no match is found
-     */
-    public static Codec fromExtension(@NotNull String extension) {
-
-        for (Codec codec : values()) {
-            if (extension.equalsIgnoreCase(codec.getExtension())) {
-                return codec;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Retrieve the mimeType associated to the current {@link Codec}.
-
+     *
      * @return The mimeType
      */
     public String getMimeType() {
 
         return switch (this) {
-            case VIDEO_COPY, AUDIO_COPY ->
-                    throw new UnsupportedOperationException("Copy codec are just flags and cannot have a mime type");
-
-            // Video
-            case H264, H265, MPEG2, PRORES, DV -> "video/mp4";
+            case H264, H265 -> "video/mp4";
             case VP9, AV1 -> "video/webm";
-
-            // Audio
             case AAC, ALAC -> "audio/mp4";
             case MP3 -> "audio/mpeg";
             case OPUS, VORBIS -> "audio/ogg";
@@ -160,16 +220,25 @@ public enum Codec {
             case EAC3 -> "audio/eac3";
             case DTS -> "audio/vnd.dts";
             case TRUEHD -> "audio/mlp";
-            case WAV -> "audio/wav";
-
-            // Subtitle
-
             case SRT -> "application/x-subrip";
             case ASS, SSA -> "text/x-ssa";
             case PGS -> "application/pgs";
             case DVB_SUB -> "application/dvbsubs";
-            case VTT -> "text/vtt";
-            case MOV_TEXT -> "application/mp4";
+            case VIDEO_COPY, AUDIO_COPY, SUBTITLES_COPY ->
+                    throw new IllegalStateException("*_COPY codecs are special codec and thus does not support mime type");
+        };
+    }
+
+    /**
+     * Check if the current {@link Codec} is a special copy codec.
+     *
+     * @return True if the current {@link Codec} is a copy codec, false otherwise.
+     */
+    public boolean isCopyCodec() {
+
+        return switch (this) {
+            case VIDEO_COPY, AUDIO_COPY, SUBTITLES_COPY -> true;
+            default -> false;
         };
     }
 }
