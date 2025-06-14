@@ -132,12 +132,12 @@ tasks.named('sourcesJar') {
     dependsOn tasks.named('collectExternalDependenciesForSentry')
 }
 
-tasks.register('zipSnapshots', Zip) {
+tasks.register('zipSnapshot', Zip) {
     var version = project.version.toString()
     group = 'distribution'
     description = 'Zips the snapshot artifacts for Maven Central.'
     from "$buildDir/dist/snapshots"
-    archiveFileName = "snapshot-$version.zip"
+    archiveFileName = "snapshot-${version}.zip"
     destinationDirectory = file("$buildDir/zips")
 }
 
@@ -145,8 +145,8 @@ tasks.register('zipRelease', Zip) {
     var version = project.version.toString()
     group = 'distribution'
     description = 'Zips the release artifacts for Maven Central.'
-    from "$buildDir/dist/release"
-    archiveFileName = "release-$version.zip"
+    from "$buildDir/dist/releases"
+    archiveFileName = "release-${version}.zip"
     destinationDirectory = file("$buildDir/zips")
 }
 
