@@ -4,8 +4,9 @@ import fr.anisekai.wireless.annotations.ExternallyBoundBy;
 import fr.anisekai.wireless.api.persistence.interfaces.Entity;
 import fr.anisekai.wireless.remote.enums.ExternalBindType;
 import fr.anisekai.wireless.remote.keys.TorrentKey;
-import fr.anisekai.wireless.remote.keys.VoterKey;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
 
 /**
  * Interface representing the base structure for a torrent file.
@@ -83,6 +84,20 @@ public interface TorrentFileEntity<E extends EpisodeEntity<?>, T extends Torrent
     @ExternallyBoundBy(ExternalBindType.TRANSMISSION)
     void setName(@NotNull String name);
 
+    /**
+     * Check if the original {@link File} represented by this {@link TorrentFileEntity} has been deleted.
+     *
+     * @return True if removed, false otherwise.
+     */
+    boolean isRemoved();
+
+    /**
+     * Define if the original {@link File} represented by this {@link TorrentFileEntity} has been deleted.
+     *
+     * @param removed
+     *         True if removed, false otherwise.
+     */
+    void setRemoved(boolean removed);
 
     /**
      * Retrieve this {@link Entity} primary key.
