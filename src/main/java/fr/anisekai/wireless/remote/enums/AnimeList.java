@@ -36,24 +36,24 @@ public enum AnimeList {
     /**
      * The {@link AnimeEntity} has all its {@link EpisodeEntity} downloaded and are available.
      */
-    DOWNLOADED("\uD83D\uDCD7", Property.WATCHABLE, Property.SHOW),
+    DOWNLOADED("\uD83D\uDCD7", Property.WATCHABLE),
 
     /**
      * The {@link AnimeEntity} has still some of its {@link EpisodeEntity} being processed. This can be used only if all episodes
      * are released officially.
      */
-    DOWNLOADING("\uD83D\uDCD8", Property.SHOW),
+    DOWNLOADING("\uD83D\uDCD8"),
 
     /**
      * The {@link AnimeEntity} has been added to the database, but no {@link EpisodeEntity} is available yet.
      */
-    NOT_DOWNLOADED("\uD83D\uDCD5", Property.SHOW),
+    NOT_DOWNLOADED("\uD83D\uDCD5"),
 
     /**
      * The {@link AnimeEntity} has been added to the database, but no source to download any {@link EpisodeEntity} has been
      * found.
      */
-    NO_SOURCE("\uD83D\uDCD9", Property.SHOW),
+    NO_SOURCE("\uD83D\uDCD9"),
 
     /**
      * The {@link AnimeEntity} is not yet released.
