@@ -137,9 +137,19 @@ public class MediaTests {
     @DisplayName("ffmpeg | Split files to MKV")
     public void testCombine() {
 
+        File      target = getTestFile(TEST_DATA_FILE, true);
+        MediaFile media  = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
+        Map<MediaStream, File> files = Assertions.assertDoesNotThrow(() -> FFMpeg.explode(
+                media,
+                Codec.VIDEO_COPY,
+                Codec.AUDIO_COPY,
+                Codec.SUBTITLES_COPY,
+                1
+        ));
+
         File video  = getTestFile(TEST_DATA_RES_VIDEO, false);
-        File audio1 = getTestFile(TEST_DATA_RES_AUDIO_1, false);
-        File audio2 = getTestFile(TEST_DATA_RES_AUDIO_2, false);
+        File audio1 = getTestFile(TEST_DATA_EXT_AUDIO_1, false);
+        File audio2 = getTestFile(TEST_DATA_EXT_AUDIO_2, false);
         File subs1  = getTestFile(TEST_DATA_RES_SUBS_1, false);
         File subs2  = getTestFile(TEST_DATA_RES_SUBS_2, false);
 
@@ -156,12 +166,12 @@ public class MediaTests {
                 subs2Meta,
                 subs1Meta
         ));
-        MediaFile media = Assertions.assertDoesNotThrow(() -> MediaFile.of(output));
+        MediaFile merged = Assertions.assertDoesNotThrow(() -> MediaFile.of(output));
 
-        Assertions.assertEquals(5, media.getStreams().size(), "Media stream count mismatch");
-        Assertions.assertEquals(1, media.getStreams(CodecType.VIDEO).size(), "Video stream count mismatch");
-        Assertions.assertEquals(2, media.getStreams(CodecType.AUDIO).size(), "Audio stream count mismatch");
-        Assertions.assertEquals(2, media.getStreams(CodecType.SUBTITLE).size(), "Audio stream count mismatch");
+        Assertions.assertEquals(5, merged.getStreams().size(), "Media stream count mismatch");
+        Assertions.assertEquals(1, merged.getStreams(CodecType.VIDEO).size(), "Video stream count mismatch");
+        Assertions.assertEquals(2, merged.getStreams(CodecType.AUDIO).size(), "Audio stream count mismatch");
+        Assertions.assertEquals(2, merged.getStreams(CodecType.SUBTITLE).size(), "Audio stream count mismatch");
     }
 
     @Order(6)
@@ -196,7 +206,7 @@ public class MediaTests {
     }
 
 
-    @Order(1)
+    @Order(7)
     @Test
     @DisplayName("ffprobe | Simple conversion (without subs)")
     public void testSimpleConvert() {
@@ -218,8 +228,8 @@ public class MediaTests {
         }
     }
 
-    @AfterAll
-    public static void onTestFinished() {
+    @AfterEach
+    public void onTestFinished() {
 
         File output    = getTestFile(TEST_OUTPUT_FILE, false);
         File video     = getTestFile(TEST_DATA_RES_VIDEO, false);

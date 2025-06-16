@@ -2,6 +2,7 @@ package fr.anisekai.wireless.api.json.validation;
 
 import fr.anisekai.wireless.api.json.AnisekaiArray;
 import fr.anisekai.wireless.api.json.AnisekaiJson;
+import fr.anisekai.wireless.api.json.exceptions.JSONValidationException;
 import org.json.JSONException;
 
 /**
@@ -11,7 +12,7 @@ import org.json.JSONException;
 public class JsonArrayObjectRule extends Rule {
 
     private static final String RULE_FORMAT = "[[ array '%s' is %s and %s containing objects ]]";
-    private static final String RULE_EX_MSG = "JSON rule %s failed at index %s: JSON Validation Failed.";
+    private static final String RULE_EX_MSG = "Failed at index %s";
 
     private final boolean    allowEmpty;
     private final JsonRule[] rules;
@@ -47,15 +48,15 @@ public class JsonArrayObjectRule extends Rule {
 
                 try {
                     subJson.validate(this.rules);
-                } catch (JSONException e) {
-                    throw new JSONException(String.format(RULE_EX_MSG, this, i), e);
+                } catch (JSONValidationException e) {
+                    throw new JSONValidationException(this, String.format(RULE_EX_MSG, i), e);
                 }
             }
         });
     }
 
     @Override
-    public String toString() {
+    public String getName() {
 
         String requireState = this.isRequired() ? "required" : "not required";
         String emptyState   = this.allowEmpty ? "allow empty" : "disallow empty";

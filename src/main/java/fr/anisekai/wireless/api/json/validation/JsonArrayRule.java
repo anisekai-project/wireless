@@ -2,6 +2,7 @@ package fr.anisekai.wireless.api.json.validation;
 
 import fr.anisekai.wireless.api.json.AnisekaiArray;
 import fr.anisekai.wireless.api.json.AnisekaiJson;
+import fr.anisekai.wireless.api.json.exceptions.JSONValidationException;
 import org.json.JSONException;
 
 import java.util.Arrays;
@@ -47,14 +48,14 @@ public class JsonArrayRule extends Rule {
             for (int i = 0; i < array.size(); i++) {
                 Object item = array.get(i);
                 if (Arrays.stream(this.allowedTypes).noneMatch(type -> type.isInstance(item))) {
-                    throw new JSONException(String.format(RULE_EX_MSG, this, i, item.getClass()));
+                    throw new JSONValidationException(this, String.format(RULE_EX_MSG, this, i, item.getClass()));
                 }
             }
         });
     }
 
     @Override
-    public String toString() {
+    public String getName() {
 
         String requireState = this.isRequired() ? "required" : "not required";
         String emptyState   = this.allowEmpty ? "allow empty" : "disallow empty";

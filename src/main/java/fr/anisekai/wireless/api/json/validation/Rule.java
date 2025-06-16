@@ -2,6 +2,7 @@ package fr.anisekai.wireless.api.json.validation;
 
 import fr.anisekai.wireless.api.json.AnisekaiArray;
 import fr.anisekai.wireless.api.json.AnisekaiJson;
+import fr.anisekai.wireless.api.json.exceptions.JSONValidationException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,10 +51,10 @@ public abstract class Rule implements JsonRule {
         Optional<Object> optional = source.getOptional(this.getKey());
 
         if (this.isRequired() && optional.isEmpty()) {
-            throw new IllegalArgumentException(String.format(
-                    "JSON rule %s failed: The key was required but not found or null.",
-                    this
-            ));
+            throw new JSONValidationException(
+                    this,
+                    "The key was required but not found or null."
+            );
         }
 
         return optional;
@@ -78,14 +79,13 @@ public abstract class Rule implements JsonRule {
         AnisekaiArray array = switch (o) {
             case AnisekaiArray arr -> arr;
             case JSONArray arr -> new AnisekaiArray(arr);
-            default -> throw new JSONException(String.format(
-                    "JSON rule %s failed: Incompatible type '%s'.", this, o.getClass()
-                                                                           .getSimpleName()
-            ));
+            default -> throw new JSONValidationException(
+                    this, String.format("Incompatible type '%s'.", o.getClass().getSimpleName())
+            );
         };
 
         if (array.isEmpty() && !allowEmpty) {
-            throw new JSONException(String.format("JSON rule %s failed: Empty array.", this));
+            throw new JSONValidationException(this, "Empty array.");
         }
 
         return array;
@@ -109,7 +109,7 @@ public abstract class Rule implements JsonRule {
         return switch (o) {
             case AnisekaiJson obj -> obj;
             case JSONObject obj -> new AnisekaiJson(obj);
-            default -> throw new JSONException(String.format("JSON rule %s failed: Not an object at index %s.", this, index));
+            default -> throw new JSONValidationException(this, String.format("Not an object at index %s.", index));
         };
     }
 
