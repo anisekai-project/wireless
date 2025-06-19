@@ -149,7 +149,7 @@ public interface FileIsolationContext extends AutoCloseable {
      */
     default File getStoreFile(FileStore store, ScopedEntity entity, String name) {
 
-        return this.manager().getStoreFile(this, store, name);
+        return this.manager().getStoreFile(this, store, entity, name);
     }
 
     /**
