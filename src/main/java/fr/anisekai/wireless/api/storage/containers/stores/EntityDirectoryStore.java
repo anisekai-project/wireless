@@ -1,18 +1,18 @@
 package fr.anisekai.wireless.api.storage.containers.stores;
 
 import fr.anisekai.wireless.api.storage.enums.StoreType;
-import fr.anisekai.wireless.api.storage.interfaces.FileStore;
 import fr.anisekai.wireless.api.storage.interfaces.ScopedEntity;
+import fr.anisekai.wireless.api.storage.interfaces.StorageStore;
 
 /**
- * Implementation of {@link FileStore} for {@link StoreType#ENTITY_DIRECTORY}.
+ * Implementation of {@link StorageStore} for {@link StoreType#ENTITY_DIRECTORY}.
  *
  * @param name
- *         The name of the {@link FileStore}.
+ *         The name of the {@link StorageStore}.
  * @param entityClass
- *         Type of {@link ScopedEntity} supported by this {@link FileStore}.
+ *         Type of {@link ScopedEntity} supported by this {@link StorageStore}.
  */
-public record EntityDirectoryStore(String name, Class<? extends ScopedEntity> entityClass) implements FileStore {
+public record EntityDirectoryStore(String name, Class<? extends ScopedEntity> entityClass) implements StorageStore {
 
     @Override
     public StoreType type() {
@@ -23,7 +23,7 @@ public record EntityDirectoryStore(String name, Class<? extends ScopedEntity> en
     @Override
     public String extension() {
 
-        throw new UnsupportedOperationException("This FileStore does not support extension");
+        throw new UnsupportedOperationException("This store does not support extension");
     }
 
 }

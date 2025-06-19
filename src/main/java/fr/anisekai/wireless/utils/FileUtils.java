@@ -1,12 +1,12 @@
 package fr.anisekai.wireless.utils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.function.Function;
 
 /**
  * Utility class for various {@link File} operation.
@@ -25,10 +25,10 @@ public final class FileUtils {
      *
      * @return True if {@code child} is located directly within {@code parent}, false otherwise
      */
-    public static boolean isDirectChild(File parent, File child) {
+    public static boolean isDirectChild(Path parent, Path child) {
 
-        Path parentPath = parent.toPath().toAbsolutePath().normalize();
-        Path childPath  = child.toPath().toAbsolutePath().normalize();
+        Path parentPath = parent.toAbsolutePath().normalize();
+        Path childPath  = child.toAbsolutePath().normalize();
 
         return childPath.getParent().equals(parentPath);
     }
@@ -43,52 +43,58 @@ public final class FileUtils {
      *
      * @return True if {@code child} is a descendant of {@code parent}, false otherwise
      */
-    public static boolean isChild(File parent, File child) {
+    public static boolean isChild(Path parent, Path child) {
 
-        Path parentPath = parent.toPath().toAbsolutePath().normalize();
-        Path childPath  = child.toPath().toAbsolutePath().normalize();
+        Path parentPath = parent.toAbsolutePath().normalize();
+        Path childPath  = child.toAbsolutePath().normalize();
 
         return childPath.startsWith(parentPath);
     }
 
     /**
-     * Recursively deletes the provided {@link File}. If it's a directory, its content will be deleted first. Fails fast on errors
-     * and does not follow symbolic links to avoid unintended deletion.
+     * Recursively deletes the provided {@link Path}. If it's a directory, its content will be deleted first.
      *
-     * @param file
-     *         The {@link File} or directory to delete.
+     * @param path
+     *         The {@link Path} of the directory or file to delete.
      *
      * @throws IOException
      *         If any deletion fails
      */
-    public static void deleteRecursively(File file) throws IOException {
+    public static void delete(Path path) throws IOException {
 
-        if (!file.exists()) {
+        if (!Files.exists(path)) {
             return;
         }
 
-        Path path = file.toPath();
-
-        if (Files.isSymbolicLink(path)) {
-            // Delete the link itself, not what it points to
+        if (Files.isRegularFile(path)) {
             Files.delete(path);
             return;
         }
 
-        if (file.isDirectory()) {
-            File[] files = file.listFiles();
-            if (files == null) {
-                throw new IOException("Unable to list directory: " + file);
-            }
+        if (Files.isDirectory(path)) {
+            Files.walkFileTree(
+                    path,
+                    new SimpleFileVisitor<>() {
 
-            for (File child : files) {
-                deleteRecursively(child);
-            }
+                        @Override
+                        public @NotNull FileVisitResult visitFile(@NotNull Path file, @NotNull BasicFileAttributes attrs) throws IOException {
+
+                            Files.delete(file);
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public @NotNull FileVisitResult postVisitDirectory(@NotNull Path dir, @Nullable IOException exc) throws IOException {
+
+                            Files.delete(dir);
+                            return FileVisitResult.CONTINUE;
+                        }
+                    }
+            );
+            return;
         }
 
-        if (!file.delete()) {
-            throw new IOException("Failed to delete file: " + file);
-        }
+        throw new UnsupportedOperationException("Unable to delete path: " + path);
     }
 
     /**
@@ -104,68 +110,79 @@ public final class FileUtils {
      * @throws IOException
      *         If the copy fails.
      */
-    public static void copyRecursively(Path source, Path destination, CopyOption... options) throws IOException {
+    public static void copy(Path source, Path destination, CopyOption... options) throws IOException {
 
-        Files.walkFileTree(
-                source,
-                new SimpleFileVisitor<>() {
+        if (Files.isDirectory(source)) {
+            Files.walkFileTree(
+                    source,
+                    new SimpleFileVisitor<>() {
 
-                    @Override
-                    public @NotNull FileVisitResult preVisitDirectory(@NotNull Path dir, @NotNull BasicFileAttributes attrs) throws IOException {
+                        @Override
+                        public @NotNull FileVisitResult preVisitDirectory(@NotNull Path dir, @NotNull BasicFileAttributes attrs) throws IOException {
 
-                        Files.createDirectories(destination.resolve(source.relativize(dir).toString()));
-                        return FileVisitResult.CONTINUE;
+                            Files.createDirectories(destination.resolve(source.relativize(dir).toString()));
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public @NotNull FileVisitResult visitFile(@NotNull Path file, @NotNull BasicFileAttributes attrs) throws IOException {
+
+                            Files.copy(file, destination.resolve(source.relativize(file).toString()), options);
+                            return FileVisitResult.CONTINUE;
+                        }
                     }
+            );
+            return;
+        }
 
-                    @Override
-                    public @NotNull FileVisitResult visitFile(@NotNull Path file, @NotNull BasicFileAttributes attrs) throws IOException {
+        if (Files.isRegularFile(source)) {
+            Files.copy(source, destination, options);
+            return;
+        }
 
-                        Files.copy(file, destination.resolve(source.relativize(file).toString()), options);
-                        return FileVisitResult.CONTINUE;
-                    }
-                }
-        );
+        throw new UnsupportedOperationException("Unable to copy source file: " + source);
     }
 
     /**
-     * Ensure that the provided {@link File} will be an existing directory.
+     * Make sure the provided {@link Path} is a directory.
      *
-     * @param directory
-     *         The {@link File} pointing to a directory.
+     * @param path
+     *         The {@link Path}
      *
      * @throws IOException
-     *         If the directory could not be created, or if it was a file all along.
+     *         If the directory could not be created.
      */
-    public static void ensureDirectoryExists(File directory) throws IOException {
+    public static void ensureDirectory(Path path) throws IOException {
 
-        if (!directory.exists()) {
-            if (!directory.mkdirs()) {
-                throw new IOException("Could not create directory (" + directory.getAbsolutePath() + ")");
-            }
+        if (Files.isDirectory(path)) {
+            return;
         }
 
-        if (directory.isFile()) {
-            throw new IOException("Not a directory (" + directory.getAbsolutePath() + ")");
+        if (Files.isRegularFile(path)) {
+            throw new IllegalStateException(path + " is a regular file");
         }
+
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
+            return;
+        }
+
+        throw new IllegalStateException(path + " exists and it is neither a directory or regular file");
     }
 
     /**
-     * Ensure that the provided {@link File} will be an existing directory.
+     * Make sure the provided {@link Path} is a file.
      *
-     * @param directory
-     *         The {@link File} pointing to a directory.
-     * @param exceptionWrapper
-     *         The {@link Function} to use to wrap an {@link IOException} if it ever occurs.
-     * @param <T>
-     *         The exception type thrown
+     * @param path
+     *         The {@link Path}
      */
-    public static <T extends RuntimeException> void ensureDirectoryExists(File directory, Function<IOException, T> exceptionWrapper) {
+    public static void ensureFile(Path path) {
 
-        try {
-            ensureDirectoryExists(directory);
-        } catch (IOException e) {
-            throw exceptionWrapper.apply(e);
+        if (!Files.exists(path) || Files.isRegularFile(path)) {
+            return;
         }
+
+        throw new IllegalStateException(path + " is a not a file");
     }
 
 }

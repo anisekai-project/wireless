@@ -3,160 +3,151 @@ package fr.anisekai.wireless.storage;
 import fr.anisekai.wireless.api.storage.LibraryManager;
 import fr.anisekai.wireless.api.storage.containers.AccessScope;
 import fr.anisekai.wireless.api.storage.containers.stores.EntityDirectoryStore;
-import fr.anisekai.wireless.api.storage.containers.stores.EntityFileStore;
-import fr.anisekai.wireless.api.storage.containers.stores.RawFileStore;
+import fr.anisekai.wireless.api.storage.containers.stores.EntityStorageStore;
+import fr.anisekai.wireless.api.storage.containers.stores.RawStorageStore;
 import fr.anisekai.wireless.api.storage.enums.StorePolicy;
 import fr.anisekai.wireless.api.storage.exceptions.*;
-import fr.anisekai.wireless.api.storage.interfaces.FileIsolationContext;
-import fr.anisekai.wireless.api.storage.interfaces.FileStore;
+import fr.anisekai.wireless.api.storage.interfaces.Library;
 import fr.anisekai.wireless.api.storage.interfaces.ScopedEntity;
+import fr.anisekai.wireless.api.storage.interfaces.StorageIsolationContext;
+import fr.anisekai.wireless.api.storage.interfaces.StorageStore;
 import fr.anisekai.wireless.storage.data.ScopedEntityA;
 import fr.anisekai.wireless.storage.data.ScopedEntityB;
 import fr.anisekai.wireless.utils.FileUtils;
 import org.junit.jupiter.api.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
-import java.util.Set;
 
 @DisplayName("Library Storage")
 @Tags({@Tag("unit-test"), @Tag("library-storage")})
 @TestMethodOrder(MethodOrderer.DisplayName.class)
 public class StorageTests {
 
-    private static FileStore randomRaw() {
+    public static final Path TEST_LIBRARY_PATH = Path.of("test-data", "library");
 
-        return new RawFileStore(LibraryManager.getRandomName());
+    private static StorageStore randomRaw() {
+
+        return new RawStorageStore(LibraryManager.getRandomName());
     }
 
-    private static FileStore randomDirStore(Class<? extends ScopedEntity> entityClass) {
+    private static StorageStore randomDirStore(Class<? extends ScopedEntity> entityClass) {
 
         return new EntityDirectoryStore(LibraryManager.getRandomName(), entityClass);
     }
 
-    private static FileStore randomFileStore(Class<? extends ScopedEntity> entityClass) {
+    private static StorageStore randomFileStore(Class<? extends ScopedEntity> entityClass) {
 
-        return new EntityFileStore(LibraryManager.getRandomName(), entityClass, "txt");
+        return new EntityStorageStore(LibraryManager.getRandomName(), entityClass, "txt");
     }
 
     @Test
     @DisplayName("Library Creation | On File")
     public void testLibraryCreationOnFile() {
 
-        File testData = new File("test-data");
-        File library  = new File(testData, "video.mkv");
+        Path root = Path.of("test-data", "video.mkv");
 
-        IllegalStateException ex = Assertions.assertThrows(
-                IllegalStateException.class,
-                () -> new LibraryManager(library)
+        LibraryInitializationException ex = Assertions.assertThrows(
+                LibraryInitializationException.class,
+                () -> new LibraryManager(root)
         );
 
-        Assertions.assertEquals("Failure while initializing library.", ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("is a regular file"));
     }
 
     @Test
     @DisplayName("Store Registration | Name Clash")
-    public void testStoreRegistrationNameClashes() {
+    public void testStoreRegistrationNameClashes() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            StorageStore store = randomRaw();
 
-        FileStore store = randomRaw();
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(store, StorePolicy.PRIVATE));
 
-        Assertions.assertDoesNotThrow(() -> manager.register(store, StorePolicy.PRIVATE));
+            StorageRegistrationException ex = Assertions.assertThrows(
+                    StorageRegistrationException.class,
+                    () -> manager.registerStore(store, StorePolicy.PRIVATE)
+            );
 
-        StoreRegistrationException ex = Assertions.assertThrows(
-                StoreRegistrationException.class,
-                () -> manager.register(store, StorePolicy.PRIVATE)
-        );
-
-        Assertions.assertTrue(ex.getMessage().contains("already registered"));
+            Assertions.assertTrue(ex.getMessage().contains("already registered"));
+        }
     }
 
     @Test
     @DisplayName("Store Registration | Raw Stores policies")
-    public void testStoreRegistrationPolicyForRawStores() {
+    public void testStoreRegistrationPolicyForRawStores() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            StorageStore sPrivate   = randomRaw();
+            StorageStore sOverwrite = randomRaw();
+            StorageStore sFullSwap  = randomRaw();
+            StorageStore sDiscard   = randomRaw();
 
-        FileStore sPrivate   = randomRaw();
-        FileStore sOverwrite = randomRaw();
-        FileStore sFullSwap  = randomRaw();
-        FileStore sDiscard   = randomRaw();
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(sPrivate, StorePolicy.PRIVATE));
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(sDiscard, StorePolicy.DISCARD));
 
-        Assertions.assertDoesNotThrow(() -> manager.register(sPrivate, StorePolicy.PRIVATE));
-        Assertions.assertDoesNotThrow(() -> manager.register(sDiscard, StorePolicy.DISCARD));
+            StorageRegistrationException ex;
 
-        StoreRegistrationException ex;
+            ex = Assertions.assertThrows(
+                    StorageRegistrationException.class,
+                    () -> manager.registerStore(sOverwrite, StorePolicy.OVERWRITE)
+            );
 
-        ex = Assertions.assertThrows(
-                StoreRegistrationException.class,
-                () -> manager.register(sOverwrite, StorePolicy.OVERWRITE)
-        );
+            Assertions.assertTrue(ex.getMessage().contains("policy"));
 
-        Assertions.assertTrue(ex.getMessage().contains("policy"));
+            ex = Assertions.assertThrows(
+                    StorageRegistrationException.class,
+                    () -> manager.registerStore(sFullSwap, StorePolicy.FULL_SWAP)
+            );
 
-        ex = Assertions.assertThrows(
-                StoreRegistrationException.class,
-                () -> manager.register(sFullSwap, StorePolicy.FULL_SWAP)
-        );
-
-        Assertions.assertTrue(ex.getMessage().contains("policy"));
+            Assertions.assertTrue(ex.getMessage().contains("policy"));
+        }
     }
 
     @Test
     @DisplayName("Store Registration | Entity Directory Stores policies")
-    public void testStoreRegistrationPolicyForEntityDirectoryStores() {
+    public void testStoreRegistrationPolicyForEntityDirectoryStores() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            StorageStore sPrivate   = randomDirStore(ScopedEntityA.class);
+            StorageStore sOverwrite = randomDirStore(ScopedEntityA.class);
+            StorageStore sFullSwap  = randomDirStore(ScopedEntityA.class);
+            StorageStore sDiscard   = randomDirStore(ScopedEntityA.class);
 
-        FileStore sPrivate   = randomDirStore(ScopedEntityA.class);
-        FileStore sOverwrite = randomDirStore(ScopedEntityA.class);
-        FileStore sFullSwap  = randomDirStore(ScopedEntityA.class);
-        FileStore sDiscard   = randomDirStore(ScopedEntityA.class);
-
-        Assertions.assertDoesNotThrow(() -> manager.register(sPrivate, StorePolicy.PRIVATE));
-        Assertions.assertDoesNotThrow(() -> manager.register(sOverwrite, StorePolicy.OVERWRITE));
-        Assertions.assertDoesNotThrow(() -> manager.register(sFullSwap, StorePolicy.FULL_SWAP));
-        Assertions.assertDoesNotThrow(() -> manager.register(sDiscard, StorePolicy.DISCARD));
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(sPrivate, StorePolicy.PRIVATE));
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(sOverwrite, StorePolicy.OVERWRITE));
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(sFullSwap, StorePolicy.FULL_SWAP));
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(sDiscard, StorePolicy.DISCARD));
+        }
     }
 
     @Test
     @DisplayName("Store Registration | Entity File Stores policies")
-    public void testStoreRegistrationPolicyForEntityFileStores() {
+    public void testStoreRegistrationPolicyForEntityFileStores() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            StorageStore sPrivate   = randomFileStore(ScopedEntityA.class);
+            StorageStore sOverwrite = randomFileStore(ScopedEntityA.class);
+            StorageStore sFullSwap  = randomFileStore(ScopedEntityA.class);
+            StorageStore sDiscard   = randomFileStore(ScopedEntityA.class);
 
-        FileStore sPrivate   = randomFileStore(ScopedEntityA.class);
-        FileStore sOverwrite = randomFileStore(ScopedEntityA.class);
-        FileStore sFullSwap  = randomFileStore(ScopedEntityA.class);
-        FileStore sDiscard   = randomFileStore(ScopedEntityA.class);
-
-        Assertions.assertDoesNotThrow(() -> manager.register(sPrivate, StorePolicy.PRIVATE));
-        Assertions.assertDoesNotThrow(() -> manager.register(sOverwrite, StorePolicy.OVERWRITE));
-        Assertions.assertDoesNotThrow(() -> manager.register(sFullSwap, StorePolicy.FULL_SWAP));
-        Assertions.assertDoesNotThrow(() -> manager.register(sDiscard, StorePolicy.DISCARD));
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(sPrivate, StorePolicy.PRIVATE));
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(sOverwrite, StorePolicy.OVERWRITE));
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(sFullSwap, StorePolicy.FULL_SWAP));
+            Assertions.assertDoesNotThrow(() -> manager.registerStore(sDiscard, StorePolicy.DISCARD));
+        }
     }
 
     @Test
     @DisplayName("Access Scope | Equality")
     public void testAccessScopeEquality() {
 
-        FileStore storeA = randomFileStore(ScopedEntityA.class);
-        FileStore storeB = randomFileStore(ScopedEntityB.class);
+        StorageStore storeA = randomFileStore(ScopedEntityA.class);
+        StorageStore storeB = randomFileStore(ScopedEntityB.class);
 
         ScopedEntity entityA1 = new ScopedEntityA("1");
         ScopedEntity entityA2 = new ScopedEntityA("2");
@@ -187,8 +178,8 @@ public class StorageTests {
     @DisplayName("Access Scope | Creation")
     public void testAccessScopeCreation() {
 
-        FileStore rawStore    = randomRaw();
-        FileStore scopedStore = randomDirStore(ScopedEntityA.class);
+        StorageStore rawStore    = randomRaw();
+        StorageStore scopedStore = randomDirStore(ScopedEntityA.class);
 
         ScopedEntity entityA1             = new ScopedEntityA("1");
         ScopedEntity entityB1             = new ScopedEntityB("1");
@@ -221,648 +212,623 @@ public class StorageTests {
 
     @Test
     @DisplayName("Library Stores | Store Out Of Bounds")
-    public void testStoreOutOfBounds() {
+    public void testStoreOutOfBounds() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            StorageStore outOfBounds = new RawStorageStore("../out-of-bounds");
 
-        FileStore outOfBounds = new RawFileStore("../out-of-bounds");
+            StorageRegistrationException ex = Assertions.assertThrows(
+                    StorageRegistrationException.class,
+                    () -> manager.registerStore(outOfBounds, StorePolicy.PRIVATE)
+            );
 
-        StoreBreakoutException ex = Assertions.assertThrows(
-                StoreBreakoutException.class,
-                () -> manager.register(outOfBounds, StorePolicy.PRIVATE)
-        );
-
-        Assertions.assertTrue(ex.getMessage().contains("out-of-bound"));
+            StorageOutOfBoundException soob = Assertions.assertInstanceOf(StorageOutOfBoundException.class, ex.getCause());
+            Assertions.assertTrue(soob.getMessage().contains("out-of-bound"));
+        }
     }
 
     @Test
     @DisplayName("Library Stores | Store directory creation failure")
-    public void testStoreCreationOnFile() {
+    public void testStoreCreationOnFile() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            StorageStore store = randomRaw();
 
-        FileStore store = randomRaw();
+            File lock = new File(TEST_LIBRARY_PATH.toFile(), store.name());
+            Assertions.assertDoesNotThrow(lock::createNewFile, "fuck, this shit is not even part of the test");
 
-        File lock = new File(library, store.name());
-        Assertions.assertDoesNotThrow(lock::createNewFile, "fuck, this shit is not even part of the test");
+            StorageRegistrationException sre = Assertions.assertThrows(
+                    StorageRegistrationException.class,
+                    () -> manager.registerStore(store, StorePolicy.PRIVATE)
+            );
 
-        StoreRegistrationException ex = Assertions.assertThrows(
-                StoreRegistrationException.class,
-                () -> manager.register(store, StorePolicy.PRIVATE)
-        );
-
-        Assertions.assertTrue(ex.getMessage().contains("Failure while registering"));
+            Assertions.assertTrue(sre.getMessage().contains("could not be registered"));
+            StorageAccessException sae = Assertions.assertInstanceOf(StorageAccessException.class, sre.getCause());
+            Assertions.assertTrue(sae.getMessage().contains("is a regular file"));
+        }
     }
 
     @Test
     @DisplayName("Isolation Context | Create with no scope")
-    public void testIsolationCreationNoScope() {
+    public void testIsolationCreationNoScope() throws Exception {
 
-        File           testData  = new File("test-data");
-        File           library   = new File(testData, "library");
-        File           isolation = new File(library, "isolation");
-        LibraryManager manager   = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            StorageIsolationContext context = Assertions.assertDoesNotThrow(() -> manager.createIsolation());
 
-        FileIsolationContext context = Assertions.assertDoesNotThrow(() -> manager.createIsolation());
-
-        try (context) {
-            File contextRoot = new File(isolation, context.name());
-            Assertions.assertTrue(isolation.exists());
-            Assertions.assertTrue(contextRoot.exists());
+            try (context) {
+                Path contextPath = TEST_LIBRARY_PATH.resolve("isolation").resolve(context.name());
+                Assertions.assertTrue(Files.exists(contextPath));
+            }
         }
     }
 
     @Test
     @DisplayName("Isolation Context | Create with a scope")
-    public void testIsolationCreationValidScope() {
+    public void testIsolationCreationValidScope() throws Exception {
 
-        ScopedEntityA  entity    = new ScopedEntityA("1");
-        File           testData  = new File("test-data");
-        File           library   = new File(testData, "library");
-        File           isolation = new File(library, "isolation");
-        LibraryManager manager   = new LibraryManager(library);
+        ScopedEntityA entity = new ScopedEntityA("1");
+        StorageStore  store  = randomFileStore(ScopedEntityA.class);
+        AccessScope   scope  = new AccessScope(store, entity);
 
-        FileStore store = randomFileStore(ScopedEntityA.class);
-        manager.register(store, StorePolicy.OVERWRITE);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
+            StorageIsolationContext context = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scope));
 
-        AccessScope          scope   = new AccessScope(store, entity);
-        FileIsolationContext context = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scope));
-
-        try (context) {
-            File contextRoot = new File(isolation, context.name());
-            Assertions.assertTrue(isolation.exists());
-            Assertions.assertTrue(contextRoot.exists());
+            try (context) {
+                Path contextPath = TEST_LIBRARY_PATH.resolve("isolation").resolve(context.name());
+                Assertions.assertTrue(Files.exists(contextPath));
+            }
         }
     }
 
     @Test
     @DisplayName("Isolation Context | Create with a scope in use")
-    public void testIsolationCreationScopeClash() {
+    public void testIsolationCreationScopeClash() throws Exception {
 
-        ScopedEntityA  entity   = new ScopedEntityA("1");
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        ScopedEntityA entity = new ScopedEntityA("1");
+        StorageStore  store  = randomFileStore(ScopedEntityA.class);
+        AccessScope   scope  = new AccessScope(store, entity);
 
-        FileStore store = randomFileStore(ScopedEntityA.class);
-        manager.register(store, StorePolicy.OVERWRITE);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
+            StorageIsolationContext context = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scope));
 
-        AccessScope          scope   = new AccessScope(store, entity);
-        FileIsolationContext context = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scope));
-
-        try (context) {
-            ScopeGrantException ex = Assertions.assertThrows(ScopeGrantException.class, () -> manager.createIsolation(scope));
-            Assertions.assertTrue(ex.getMessage().contains("already claimed"));
+            try (context) {
+                ScopeGrantException ex = Assertions.assertThrows(ScopeGrantException.class, () -> manager.createIsolation(scope));
+                Assertions.assertTrue(ex.getMessage().contains("is already claimed"));
+            }
         }
     }
 
     @Test
     @DisplayName("Isolation Context | Request used scope")
-    public void testIsolationRequestUsedScope() {
+    public void testIsolationRequestUsedScope() throws Exception {
 
+        StorageStore  store   = randomFileStore(ScopedEntityA.class);
         ScopedEntityA entityA = new ScopedEntityA("A");
         ScopedEntityA entityB = new ScopedEntityA("B");
+        AccessScope   scopeA  = new AccessScope(store, entityA);
+        AccessScope   scopeB  = new AccessScope(store, entityB);
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
 
-        FileStore store = randomFileStore(ScopedEntityA.class);
-        manager.register(store, StorePolicy.OVERWRITE);
+            StorageIsolationContext contextA = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scopeA));
+            StorageIsolationContext contextB = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scopeB));
 
-        AccessScope scopeA = new AccessScope(store, entityA);
-        AccessScope scopeB = new AccessScope(store, entityB);
+            ScopeGrantException ex;
 
-        FileIsolationContext contextA = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scopeA));
-        FileIsolationContext contextB = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scopeB));
+            ex = Assertions.assertThrows(ScopeGrantException.class, () -> contextA.requestScope(scopeB));
+            Assertions.assertTrue(ex.getMessage().contains("is already claimed"));
 
-        ScopeGrantException ex;
+            ex = Assertions.assertThrows(ScopeGrantException.class, () -> contextB.requestScope(scopeA));
+            Assertions.assertTrue(ex.getMessage().contains("is already claimed"));
 
-        ex = Assertions.assertThrows(ScopeGrantException.class, () -> contextA.requestScope(scopeB));
-        Assertions.assertTrue(ex.getMessage().contains("already claimed"));
-
-        ex = Assertions.assertThrows(ScopeGrantException.class, () -> contextB.requestScope(scopeA));
-        Assertions.assertTrue(ex.getMessage().contains("already claimed"));
-
-        contextA.close();
-        contextB.close();
+            contextA.close();
+            contextB.close();
+        }
     }
 
     @Test
     @DisplayName("Isolation Context | Request unused scope")
-    public void testIsolationRequestUnusedScope() {
+    public void testIsolationRequestUnusedScope() throws Exception {
 
+        StorageStore  store   = randomFileStore(ScopedEntityA.class);
         ScopedEntityA entityA = new ScopedEntityA("A");
         ScopedEntityA entityB = new ScopedEntityA("B");
+        AccessScope   scopeA  = new AccessScope(store, entityA);
+        AccessScope   scopeB  = new AccessScope(store, entityB);
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
 
-        FileStore store = randomFileStore(ScopedEntityA.class);
-        manager.register(store, StorePolicy.OVERWRITE);
+            StorageIsolationContext context = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scopeA));
 
-        AccessScope scopeA = new AccessScope(store, entityA);
-        AccessScope scopeB = new AccessScope(store, entityB);
-
-        FileIsolationContext context = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scopeA));
-
-        try (context) {
-            Assertions.assertDoesNotThrow(() -> context.requestScope(scopeB));
+            try (context) {
+                Assertions.assertDoesNotThrow(() -> context.requestScope(scopeB));
+            }
         }
     }
 
     @Test
     @DisplayName("Isolation Context | Request freed scope")
-    public void testIsolationRequestFreedScope() {
+    public void testIsolationRequestFreedScope() throws Exception {
 
+        StorageStore  store   = randomFileStore(ScopedEntityA.class);
         ScopedEntityA entityA = new ScopedEntityA("A");
         ScopedEntityA entityB = new ScopedEntityA("B");
+        AccessScope   scopeA  = new AccessScope(store, entityA);
+        AccessScope   scopeB  = new AccessScope(store, entityB);
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
 
-        FileStore store = randomFileStore(ScopedEntityA.class);
-        manager.register(store, StorePolicy.OVERWRITE);
+            StorageIsolationContext contextA = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scopeA));
+            StorageIsolationContext contextB = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scopeB));
 
-        AccessScope scopeA = new AccessScope(store, entityA);
-        AccessScope scopeB = new AccessScope(store, entityB);
+            ScopeGrantException ex = Assertions.assertThrows(
+                    ScopeGrantException.class,
+                    () -> contextA.requestScope(scopeB)
+            );
 
-        try (FileIsolationContext outsideContext = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scopeA))) {
+            Assertions.assertTrue(ex.getMessage().contains("is already claimed"));
+            contextB.close();
 
-            try (FileIsolationContext insideContext = Assertions.assertDoesNotThrow(() -> manager.createIsolation(scopeB))) {
-
-                ScopeGrantException ex = Assertions.assertThrows(
-                        ScopeGrantException.class,
-                        () -> outsideContext.requestScope(scopeB)
-                );
-                Assertions.assertTrue(ex.getMessage().contains("already claimed"));
-
-                insideContext.commit();
-            }
-
-            Assertions.assertDoesNotThrow(() -> outsideContext.requestScope(scopeB));
+            Assertions.assertDoesNotThrow(() -> contextA.requestScope(scopeB));
         }
     }
 
     @Test
     @DisplayName("Isolation Context | Create on unregistered store")
-    public void testIsolationCreationStoreNotSupported() {
+    public void testIsolationCreationStoreNotSupported() throws Exception {
 
-        ScopedEntityA  entity   = new ScopedEntityA("1");
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        StorageStore  store  = randomFileStore(ScopedEntityA.class);
+        ScopedEntityA entity = new ScopedEntityA("1");
+        AccessScope   scope  = new AccessScope(store, entity);
 
-        FileStore   store = randomFileStore(ScopedEntityA.class);
-        AccessScope scope = new AccessScope(store, entity);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
 
-        StoreAccessException ex = Assertions.assertThrows(StoreAccessException.class, () -> manager.createIsolation(scope));
-
-        Assertions.assertTrue(ex.getMessage().contains("does not support"));
+            StorageAccessException ex = Assertions.assertThrows(
+                    StorageAccessException.class,
+                    () -> manager.createIsolation(scope)
+            );
+            Assertions.assertTrue(ex.getMessage().contains("is not registered on the library"));
+        }
     }
 
     @Test
     @DisplayName("Isolation Context | Forbidden use after commit/discard")
-    public void testIsolationUseAfterCommit() {
+    public void testIsolationUseAfterCommit() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            StorageIsolationContext context = Assertions.assertDoesNotThrow(() -> manager.createIsolation());
+            context.commit();
 
-        FileIsolationContext context = Assertions.assertDoesNotThrow(() -> manager.createIsolation());
-        context.commit();
+            ContextUnavailableException ex;
 
-        ContextUnavailableException ex;
+            ex = Assertions.assertThrows(ContextUnavailableException.class, context::commit);
+            Assertions.assertTrue(ex.getMessage().contains("is already committed"));
 
-        ex = Assertions.assertThrows(ContextUnavailableException.class, context::commit);
-        Assertions.assertTrue(ex.getMessage().contains("already committed"));
+            ex = Assertions.assertThrows(ContextUnavailableException.class, () -> context.requestTemporaryFile("txt"));
+            Assertions.assertTrue(ex.getMessage().contains("is already committed"));
 
-        ex = Assertions.assertThrows(ContextUnavailableException.class, () -> context.requestTemporaryFile("txt"));
-        Assertions.assertTrue(ex.getMessage().contains("already committed"));
+            context.close();
 
-        context.close();
+            ex = Assertions.assertThrows(ContextUnavailableException.class, context::commit);
+            Assertions.assertTrue(ex.getMessage().contains("has already been discarded"));
 
-        ex = Assertions.assertThrows(ContextUnavailableException.class, context::commit);
-        Assertions.assertTrue(ex.getMessage().contains("already discarded"));
-
-        ex = Assertions.assertThrows(ContextUnavailableException.class, () -> context.requestTemporaryFile("txt"));
-        Assertions.assertTrue(ex.getMessage().contains("already discarded"));
+            ex = Assertions.assertThrows(ContextUnavailableException.class, () -> context.requestTemporaryFile("txt"));
+            Assertions.assertTrue(ex.getMessage().contains("has already been discarded"));
+        }
     }
 
     @Test
     @DisplayName("Isolation Writing | Write to a temporary file")
-    public void testIsolationWritingToTemporaryFile() {
+    public void testIsolationWritingToTemporaryFile() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            StorageIsolationContext context = manager.createIsolation(Collections.emptySet());
 
-        try (FileIsolationContext context = manager.createIsolation(Collections.emptySet())) {
-            File temporary = Assertions.assertDoesNotThrow(() -> context.requestTemporaryFile("txt"));
+            try (context) {
+                Path temporary = Assertions.assertDoesNotThrow(() -> context.requestTemporaryFile("txt"));
 
-            Assertions.assertDoesNotThrow(() -> Files.writeString(
-                    temporary.toPath(),
-                    "Unit Test",
-                    StandardOpenOption.CREATE_NEW,
-                    StandardOpenOption.WRITE
-            ));
+                Assertions.assertDoesNotThrow(() -> Files.writeString(
+                        temporary,
+                        "Unit Test",
+                        StandardOpenOption.CREATE_NEW,
+                        StandardOpenOption.WRITE
+                ));
 
-            context.commit();
-        }
-    }
-
-    @Test
-    @DisplayName("Isolation Writing | EntityFileStore | Named File should fail")
-    public void testIsolationWritingEntityFileStoreNamedFile() throws IOException {
-
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
-
-        ScopedEntity     entity  = new ScopedEntityA("1");
-        FileStore        store   = randomFileStore(ScopedEntityA.class);
-        AccessScope      scope   = new AccessScope(store, entity);
-        Set<AccessScope> scopes  = Set.of(scope);
-        String           content = "UnitTest";
-
-        manager.register(store, StorePolicy.OVERWRITE);
-
-        try (FileIsolationContext context = manager.createIsolation(scopes)) {
-            byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-
-            try (InputStream is = new ByteArrayInputStream(bytes)) {
-                Assertions.assertThrows(StoreAccessException.class, () -> context.store(scope, "unit.txt", is));
+                context.commit();
             }
         }
     }
 
     @Test
-    @DisplayName("Isolation Writing | EntityFileStore | Write")
-    public void testIsolationWritingEntityFileStore() throws IOException {
+    @DisplayName("Isolation Resolution | EntityFileStore")
+    public void testIsolationResolutionOnEntityFileStore() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        StorageStore store  = randomFileStore(ScopedEntityA.class);
+        ScopedEntity entity = new ScopedEntityA("1");
+        AccessScope  scope  = new AccessScope(store, entity);
 
-        ScopedEntity     entity  = new ScopedEntityA("1");
-        FileStore        store   = randomFileStore(ScopedEntityA.class);
-        AccessScope      scope   = new AccessScope(store, entity);
-        Set<AccessScope> scopes  = Set.of(scope);
-        String           content = "UnitTest";
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
 
-        manager.register(store, StorePolicy.OVERWRITE);
-
-        try (FileIsolationContext context = manager.createIsolation(scopes)) {
-            byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-
-            try (InputStream is = new ByteArrayInputStream(bytes)) {
-                Assertions.assertDoesNotThrow(() -> context.store(scope, is));
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+                Assertions.assertThrows(StorageForbiddenException.class, () -> context.resolveScope(scope, "unit.txt"));
+                Assertions.assertDoesNotThrow(() -> context.resolveScope(scope));
             }
-
-            context.commit();
         }
-
-        File file = manager.getStoreFile(store, entity);
-        Assertions.assertTrue(file.exists());
-        String finalContent = Files.readString(file.toPath());
-
-        Assertions.assertEquals(content, finalContent);
     }
 
     @Test
-    @DisplayName("Isolation Writing | EntityDirectoryStore | Write")
-    public void testIsolationWritingEntityDirectoryStore() throws IOException {
+    @DisplayName("Isolation Resolution | EntityDirectoryStore")
+    public void testIsolationResolutionOnEntityDirectoryStore() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        StorageStore store  = randomDirStore(ScopedEntityA.class);
+        ScopedEntity entity = new ScopedEntityA("1");
+        AccessScope  scope  = new AccessScope(store, entity);
 
-        ScopedEntity     entity  = new ScopedEntityA("1");
-        FileStore        store   = randomDirStore(ScopedEntityA.class);
-        AccessScope      scope   = new AccessScope(store, entity);
-        Set<AccessScope> scopes  = Set.of(scope);
-        String           content = "UnitTest";
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
 
-        manager.register(store, StorePolicy.OVERWRITE);
-
-        try (FileIsolationContext context = manager.createIsolation(scopes)) {
-            byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-
-            try (InputStream is = new ByteArrayInputStream(bytes)) {
-                Assertions.assertDoesNotThrow(() -> context.store(scope, "unit.txt", is));
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+                Assertions.assertDoesNotThrow(() -> context.resolveScope(scope));
+                Assertions.assertDoesNotThrow(() -> context.resolveScope(scope, "unit.txt"));
             }
-
-            context.commit();
         }
-
-        File file = manager.getStoreFile(store, entity, "unit.txt");
-        Assertions.assertTrue(file.exists());
-        String finalContent = Files.readString(file.toPath());
-
-        Assertions.assertEquals(content, finalContent);
     }
 
     @Test
-    @DisplayName("Isolation Writing | EntityDirectoryStore | Unnamed File should fail")
-    public void testIsolationWritingEntityDirectoryStoreUnnamedFile() throws IOException {
+    @DisplayName("Isolation Writing | EntityFileStore")
+    public void testIsolationWritingEntityFileStore() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        StorageStore store   = randomFileStore(ScopedEntityA.class);
+        ScopedEntity entity  = new ScopedEntityA("1");
+        AccessScope  scope   = new AccessScope(store, entity);
+        String       content = "UnitTest";
+        byte[]       bytes   = content.getBytes(StandardCharsets.UTF_8);
 
-        ScopedEntity     entity  = new ScopedEntityA("1");
-        FileStore        store   = randomDirStore(ScopedEntityA.class);
-        AccessScope      scope   = new AccessScope(store, entity);
-        Set<AccessScope> scopes  = Set.of(scope);
-        String           content = "UnitTest";
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
 
-        manager.register(store, StorePolicy.OVERWRITE);
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+                Path output = context.resolveScope(scope);
 
-        try (FileIsolationContext context = manager.createIsolation(scopes)) {
-            byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+                InputStream  is = new ByteArrayInputStream(bytes);
+                OutputStream os = Files.newOutputStream(output, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 
-            try (InputStream is = new ByteArrayInputStream(bytes)) {
-                Assertions.assertThrows(StoreAccessException.class, () -> context.store(scope, is));
+                try (is; os) {
+                    is.transferTo(os);
+                }
+
+                context.commit();
             }
+
+            Path output = manager.resolveScope(scope);
+            Assertions.assertTrue(Files.isRegularFile(output));
+            String finalContent = Files.readString(output, StandardCharsets.UTF_8);
+            Assertions.assertEquals(content, finalContent);
         }
     }
+
+    @Test
+    @DisplayName("Isolation Writing | EntityDirectoryStore")
+    public void testIsolationWritingEntityDirectoryStore() throws Exception {
+
+        StorageStore store   = randomDirStore(ScopedEntityA.class);
+        ScopedEntity entity  = new ScopedEntityA("1");
+        AccessScope  scope   = new AccessScope(store, entity);
+        String       content = "UnitTest";
+        byte[]       bytes   = content.getBytes(StandardCharsets.UTF_8);
+
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
+
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+                Path output = context.resolveScope(scope, "unit.txt");
+
+                InputStream  is = new ByteArrayInputStream(bytes);
+                OutputStream os = Files.newOutputStream(output, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+
+                try (is; os) {
+                    is.transferTo(os);
+                }
+
+                context.commit();
+            }
+
+            Path output = manager.resolveScope(scope, "unit.txt");
+            Assertions.assertTrue(Files.isRegularFile(output));
+            String finalContent = Files.readString(output, StandardCharsets.UTF_8);
+            Assertions.assertEquals(content, finalContent);
+        }
+    }
+
 
     @Test
     @DisplayName("Store Policy | Directory Overwrite")
-    public void testStorePolicyDirectoryOverwrite() throws IOException {
+    public void testStorePolicyDirectoryOverwrite() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        ScopedEntity entity = new ScopedEntityA("1");
+        StorageStore store  = randomDirStore(ScopedEntityA.class);
+        AccessScope  scope  = new AccessScope(store, entity);
 
-        ScopedEntity     entity = new ScopedEntityA("1");
-        FileStore        store  = randomDirStore(ScopedEntityA.class);
-        AccessScope      scope  = new AccessScope(store, entity);
-        Set<AccessScope> scopes = Set.of(scope);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
 
-        manager.register(store, StorePolicy.OVERWRITE);
+            String startingContent = "unit-test-start";
+            String endingContent   = "unit-test-end";
+            String staticContent   = "unit-test-static";
 
-        String startingContent = "unit-test-start";
-        String endingContent   = "unit-test-end";
-        String staticContent   = "unit-test-static";
+            // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
+            Path staticPath   = manager.resolveScope(scope, "static.txt");
+            Path replacedPath = manager.resolveScope(scope, "replaced.txt");
+            Files.writeString(staticPath, staticContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            Files.writeString(replacedPath, startingContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 
-        // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
-        File staticFile   = manager.getStoreFile(store, entity, "static.txt");
-        File replacedFile = manager.getStoreFile(store, entity, "replaced.txt");
-        Files.writeString(staticFile.toPath(), staticContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
-        Files.writeString(replacedFile.toPath(), startingContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+                Path output = context.resolveScope(scope, "replaced.txt");
 
-        try (FileIsolationContext context = manager.createIsolation(scopes)) {
-            try (InputStream is = new ByteArrayInputStream(endingContent.getBytes(StandardCharsets.UTF_8))) {
-                Assertions.assertDoesNotThrow(() -> context.store(scope, "replaced.txt", is));
+                InputStream  is = new ByteArrayInputStream(endingContent.getBytes(StandardCharsets.UTF_8));
+                OutputStream os = Files.newOutputStream(output, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+
+                try (is; os) {
+                    is.transferTo(os);
+                }
+
+                context.commit();
             }
 
-            context.commit();
+            Assertions.assertTrue(Files.isRegularFile(staticPath));
+            Assertions.assertTrue(Files.isRegularFile(replacedPath));
+
+            String finalStaticContent   = Files.readString(staticPath);
+            String finalReplacedContent = Files.readString(replacedPath);
+
+            Assertions.assertEquals(staticContent, finalStaticContent);
+            Assertions.assertEquals(endingContent, finalReplacedContent);
         }
-
-        Assertions.assertTrue(staticFile.exists());
-        Assertions.assertTrue(replacedFile.exists());
-
-        String finalStaticContent   = Files.readString(staticFile.toPath());
-        String finalReplacedContent = Files.readString(replacedFile.toPath());
-
-        Assertions.assertEquals(staticContent, finalStaticContent);
-        Assertions.assertEquals(endingContent, finalReplacedContent);
     }
 
     @Test
     @DisplayName("Store Policy | Directory Full Swap")
-    public void testStorePolicyDirectoryFullSwap() throws IOException {
+    public void testStorePolicyDirectoryFullSwap() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        ScopedEntity entity = new ScopedEntityA("1");
+        StorageStore store  = randomDirStore(ScopedEntityA.class);
+        AccessScope  scope  = new AccessScope(store, entity);
 
-        ScopedEntity     entity = new ScopedEntityA("1");
-        FileStore        store  = randomDirStore(ScopedEntityA.class);
-        AccessScope      scope  = new AccessScope(store, entity);
-        Set<AccessScope> scopes = Set.of(scope);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.FULL_SWAP);
 
-        manager.register(store, StorePolicy.FULL_SWAP);
+            String startingContent = "unit-test-start";
+            String endingContent   = "unit-test-end";
+            String staticContent   = "unit-test-static";
 
-        String startingContent = "unit-test-start";
-        String endingContent   = "unit-test-end";
-        String staticContent   = "unit-test-static";
+            // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
+            Path staticPath   = manager.resolveScope(scope, "static.txt");
+            Path replacedPath = manager.resolveScope(scope, "replaced.txt");
+            Files.writeString(staticPath, staticContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            Files.writeString(replacedPath, startingContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 
-        // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
-        File staticFile   = manager.getStoreFile(store, entity, "static.txt");
-        File replacedFile = manager.getStoreFile(store, entity, "replaced.txt");
-        Files.writeString(staticFile.toPath(), staticContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
-        Files.writeString(replacedFile.toPath(), startingContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+                Path output = context.resolveScope(scope, "replaced.txt");
 
-        try (FileIsolationContext context = manager.createIsolation(scopes)) {
-            try (InputStream is = new ByteArrayInputStream(endingContent.getBytes(StandardCharsets.UTF_8))) {
-                Assertions.assertDoesNotThrow(() -> context.store(scope, "replaced.txt", is));
+                InputStream  is = new ByteArrayInputStream(endingContent.getBytes(StandardCharsets.UTF_8));
+                OutputStream os = Files.newOutputStream(output, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+
+                try (is; os) {
+                    is.transferTo(os);
+                }
+
+                context.commit();
             }
 
-            context.commit();
+            Assertions.assertFalse(Files.isRegularFile(staticPath));
+            Assertions.assertTrue(Files.isRegularFile(replacedPath));
+
+            String finalReplacedContent = Files.readString(replacedPath);
+
+            Assertions.assertEquals(endingContent, finalReplacedContent);
         }
-
-        Assertions.assertFalse(staticFile.exists());
-        Assertions.assertTrue(replacedFile.exists());
-
-        String finalReplacedContent = Files.readString(replacedFile.toPath());
-
-        Assertions.assertEquals(endingContent, finalReplacedContent);
     }
 
     @Test
     @DisplayName("Store Policy | File Overwrite (Content)")
-    public void testStorePolicyFileOverwriteContent() throws IOException {
+    public void testStorePolicyFileOverwriteContent() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        ScopedEntity entity = new ScopedEntityA("1");
+        StorageStore store  = randomFileStore(ScopedEntityA.class);
+        AccessScope  scope  = new AccessScope(store, entity);
 
-        ScopedEntity     entity = new ScopedEntityA("1");
-        FileStore        store  = randomFileStore(ScopedEntityA.class);
-        AccessScope      scope  = new AccessScope(store, entity);
-        Set<AccessScope> scopes = Set.of(scope);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
 
-        manager.register(store, StorePolicy.OVERWRITE);
+            String startingContent = "unit-test-start";
+            String endingContent   = "unit-test-end";
 
-        String startingContent = "unit-test-start";
-        String endingContent   = "unit-test-end";
+            // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
+            Path path = manager.resolveScope(scope);
+            Files.writeString(path, startingContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 
-        // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
-        File localFile = manager.getStoreFile(store, entity);
-        Files.writeString(localFile.toPath(), startingContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+                Path output = context.resolveScope(scope);
 
-        try (FileIsolationContext context = manager.createIsolation(scopes)) {
-            try (InputStream is = new ByteArrayInputStream(endingContent.getBytes(StandardCharsets.UTF_8))) {
-                Assertions.assertDoesNotThrow(() -> context.store(scope, is));
+                InputStream  is = new ByteArrayInputStream(endingContent.getBytes(StandardCharsets.UTF_8));
+                OutputStream os = Files.newOutputStream(output, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+
+                try (is; os) {
+                    is.transferTo(os);
+                }
+
+                context.commit();
             }
-            context.commit();
+
+            Assertions.assertTrue(Files.isRegularFile(path));
+
+            String finalReplacedContent = Files.readString(path);
+
+            Assertions.assertEquals(endingContent, finalReplacedContent);
         }
-
-        Assertions.assertTrue(localFile.exists());
-        String finalContent = Files.readString(localFile.toPath());
-
-        Assertions.assertEquals(endingContent, finalContent);
     }
 
     @Test
     @DisplayName("Store Policy | File Overwrite (No Content)")
-    public void testStorePolicyFileOverwriteNoContent() throws IOException {
+    public void testStorePolicyFileOverwriteNoContent() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        ScopedEntity entity = new ScopedEntityA("1");
+        StorageStore store  = randomFileStore(ScopedEntityA.class);
+        AccessScope  scope  = new AccessScope(store, entity);
 
-        ScopedEntity     entity = new ScopedEntityA("1");
-        FileStore        store  = randomFileStore(ScopedEntityA.class);
-        AccessScope      scope  = new AccessScope(store, entity);
-        Set<AccessScope> scopes = Set.of(scope);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.OVERWRITE);
 
-        manager.register(store, StorePolicy.OVERWRITE);
+            String content = "unit-test";
 
-        String startingContent = "unit-test-start";
+            // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
+            Path path = manager.resolveScope(scope);
+            Files.writeString(path, content, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 
-        // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
-        File localFile = manager.getStoreFile(store, entity);
-        Files.writeString(localFile.toPath(), startingContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+                context.commit();
+            }
 
-        try (FileIsolationContext context = manager.createIsolation(scopes)) {
-            context.commit();
+            Assertions.assertTrue(Files.isRegularFile(path));
+
+            String finalContent = Files.readString(path);
+
+            Assertions.assertEquals(content, finalContent);
         }
-
-        Assertions.assertTrue(localFile.exists());
-        String finalContent = Files.readString(localFile.toPath());
-
-        Assertions.assertEquals(startingContent, finalContent);
     }
 
     @Test
     @DisplayName("Store Policy | File Full Swap (Content)")
-    public void testStorePolicyFileFullSwapContent() throws IOException {
+    public void testStorePolicyFileFullSwapContent() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        ScopedEntity entity = new ScopedEntityA("1");
+        StorageStore store  = randomFileStore(ScopedEntityA.class);
+        AccessScope  scope  = new AccessScope(store, entity);
 
-        ScopedEntity     entity = new ScopedEntityA("1");
-        FileStore        store  = randomFileStore(ScopedEntityA.class);
-        AccessScope      scope  = new AccessScope(store, entity);
-        Set<AccessScope> scopes = Set.of(scope);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.FULL_SWAP);
 
-        manager.register(store, StorePolicy.FULL_SWAP);
+            String startingContent = "unit-test-start";
+            String endingContent   = "unit-test-end";
 
-        String startingContent = "unit-test-start";
-        String endingContent   = "unit-test-end";
+            // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
+            Path path = manager.resolveScope(scope);
+            Files.writeString(path, startingContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 
-        // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
-        File localFile = manager.getStoreFile(store, entity);
-        Files.writeString(localFile.toPath(), startingContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+                Path output = context.resolveScope(scope);
 
-        try (FileIsolationContext context = manager.createIsolation(scopes)) {
-            try (InputStream is = new ByteArrayInputStream(endingContent.getBytes(StandardCharsets.UTF_8))) {
-                Assertions.assertDoesNotThrow(() -> context.store(scope, is));
+                InputStream  is = new ByteArrayInputStream(endingContent.getBytes(StandardCharsets.UTF_8));
+                OutputStream os = Files.newOutputStream(output, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+
+                try (is; os) {
+                    is.transferTo(os);
+                }
+
+                context.commit();
             }
-            context.commit();
+
+            Assertions.assertTrue(Files.isRegularFile(path));
+
+            String finalReplacedContent = Files.readString(path);
+
+            Assertions.assertEquals(endingContent, finalReplacedContent);
         }
-
-        Assertions.assertTrue(localFile.exists());
-        String finalContent = Files.readString(localFile.toPath());
-
-        Assertions.assertEquals(endingContent, finalContent);
     }
 
     @Test
     @DisplayName("Store Policy | File Full Swap (No Content)")
-    public void testStorePolicyFileFullSwapNoContent() throws IOException {
+    public void testStorePolicyFileFullSwapNoContent() throws Exception {
 
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+        ScopedEntity entity = new ScopedEntityA("1");
+        StorageStore store  = randomFileStore(ScopedEntityA.class);
+        AccessScope  scope  = new AccessScope(store, entity);
 
-        ScopedEntity     entity = new ScopedEntityA("1");
-        FileStore        store  = randomFileStore(ScopedEntityA.class);
-        AccessScope      scope  = new AccessScope(store, entity);
-        Set<AccessScope> scopes = Set.of(scope);
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(store, StorePolicy.FULL_SWAP);
 
-        manager.register(store, StorePolicy.FULL_SWAP);
+            String content = "unit-test";
 
-        String startingContent = "unit-test-start";
+            // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
+            Path path = manager.resolveScope(scope);
+            Files.writeString(path, content, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 
-        // Please don't do the following in production code (it defeats isolation, very bad), only allowed during tests :)
-        File localFile = manager.getStoreFile(store, entity);
-        Files.writeString(localFile.toPath(), startingContent, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+                context.commit();
+            }
 
-        try (FileIsolationContext context = manager.createIsolation(scopes)) {
-            context.commit();
+            Assertions.assertFalse(Files.isRegularFile(path));
         }
-
-        Assertions.assertFalse(localFile.exists());
     }
 
     @Test
     @DisplayName("File Access Boundaries")
-    public void testFileAccessBoundaries() {
-
-        File           testData = new File("test-data");
-        File           library  = new File(testData, "library");
-        LibraryManager manager  = new LibraryManager(library);
+    public void testFileAccessBoundaries() throws Exception {
 
         ScopedEntity entity      = new ScopedEntityA("1");
         String       oobFilename = "../escape-path.txt";
         String       filename    = "normal.txt";
         String       veryMeanOob = ".txt/../../escape-path.txt";
 
-        FileStore scopedStore = randomDirStore(ScopedEntityA.class);
-        FileStore rawStore    = randomRaw();
-
-        manager.register(scopedStore, StorePolicy.OVERWRITE);
-        manager.register(rawStore, StorePolicy.DISCARD);
+        StorageStore scopedStore = randomDirStore(ScopedEntityA.class);
+        StorageStore rawStore    = randomRaw();
 
         AccessScope scope = new AccessScope(scopedStore, entity);
 
-        File file, storeRoot;
+        try (Library manager = new LibraryManager(TEST_LIBRARY_PATH)) {
+            manager.registerStore(scopedStore, StorePolicy.OVERWRITE);
+            manager.registerStore(rawStore, StorePolicy.DISCARD);
 
-        // Test library boundaries
-        storeRoot = Assertions.assertDoesNotThrow(() -> manager.getStoreFile(rawStore));
-        file      = Assertions.assertDoesNotThrow(() -> manager.getStoreFile(rawStore, filename));
-        Assertions.assertTrue(FileUtils.isDirectChild(storeRoot, file));
+            Path path, storeRoot;
 
-        storeRoot = Assertions.assertDoesNotThrow(() -> manager.getStoreFile(scopedStore, entity));
-        file      = Assertions.assertDoesNotThrow(() -> manager.getStoreFile(scopedStore, entity, filename));
-        Assertions.assertTrue(FileUtils.isDirectChild(storeRoot, file));
+            // Test library boundaries
+            storeRoot = Assertions.assertDoesNotThrow(() -> manager.resolveDirectory(rawStore));
+            path      = Assertions.assertDoesNotThrow(() -> manager.resolveFile(rawStore, filename));
+            Assertions.assertTrue(FileUtils.isDirectChild(storeRoot, path));
 
-        Assertions.assertThrows(StoreBreakoutException.class, () -> manager.getStoreFile(rawStore, oobFilename));
-        Assertions.assertThrows(StoreBreakoutException.class, () -> manager.getStoreFile(scopedStore, entity, oobFilename));
-        Assertions.assertThrows(StoreBreakoutException.class, () -> manager.getStoreFile(rawStore, veryMeanOob));
-        Assertions.assertThrows(StoreBreakoutException.class, () -> manager.getStoreFile(scopedStore, entity, veryMeanOob));
+            storeRoot = Assertions.assertDoesNotThrow(() -> manager.resolveDirectory(scopedStore, entity));
+            path      = Assertions.assertDoesNotThrow(() -> manager.resolveFile(scopedStore, entity, filename));
+            Assertions.assertTrue(FileUtils.isDirectChild(storeRoot, path));
 
-        // Test isolation boundaries
-        try (FileIsolationContext context = manager.createIsolation(scope)) {
+            Assertions.assertThrows(StorageOutOfBoundException.class, () -> manager.resolveFile(rawStore, oobFilename));
+            Assertions.assertThrows(
+                    StorageOutOfBoundException.class,
+                    () -> manager.resolveFile(scopedStore, entity, oobFilename)
+            );
+            Assertions.assertThrows(StorageOutOfBoundException.class, () -> manager.resolveFile(rawStore, veryMeanOob));
+            Assertions.assertThrows(
+                    StorageOutOfBoundException.class,
+                    () -> manager.resolveFile(scopedStore, entity, veryMeanOob)
+            );
 
-            storeRoot = Assertions.assertDoesNotThrow(() -> context.getStoreFile(scopedStore, entity));
-            file      = Assertions.assertDoesNotThrow(() -> context.getStoreFile(scopedStore, entity, filename));
-            Assertions.assertTrue(FileUtils.isDirectChild(storeRoot, file));
 
-            Assertions.assertThrows(StoreBreakoutException.class, () -> context.getStoreFile(scopedStore, entity, oobFilename));
-            Assertions.assertThrows(StoreBreakoutException.class, () -> context.requestTemporaryFile(veryMeanOob));
+            // Test isolation boundaries
+            try (StorageIsolationContext context = manager.createIsolation(scope)) {
+
+                storeRoot = Assertions.assertDoesNotThrow(() -> context.resolveScope(scope));
+                path      = Assertions.assertDoesNotThrow(() -> context.resolveScope(scope, filename));
+                Assertions.assertTrue(FileUtils.isDirectChild(storeRoot, path));
+
+                Assertions.assertThrows(
+                        StorageOutOfBoundException.class,
+                        () -> context.resolveScope(scope, oobFilename)
+                );
+                Assertions.assertThrows(StorageOutOfBoundException.class, () -> context.requestTemporaryFile(veryMeanOob));
+            }
         }
-
     }
 
 
     @AfterEach
     public void cleanup() throws IOException {
 
-        File testData = new File("test-data");
-        File library  = new File(testData, "library");
-        FileUtils.deleteRecursively(library);
+        FileUtils.delete(TEST_LIBRARY_PATH);
     }
 
 }

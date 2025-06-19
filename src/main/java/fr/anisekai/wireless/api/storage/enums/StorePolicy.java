@@ -1,35 +1,35 @@
 package fr.anisekai.wireless.api.storage.enums;
 
 import fr.anisekai.wireless.api.storage.LibraryManager;
-import fr.anisekai.wireless.api.storage.interfaces.FileIsolationContext;
-import fr.anisekai.wireless.api.storage.interfaces.FileStore;
+import fr.anisekai.wireless.api.storage.interfaces.StorageIsolationContext;
+import fr.anisekai.wireless.api.storage.interfaces.StorageStore;
 
 /**
- * Describe how a {@link FileStore} should be handled by the {@link LibraryManager} with {@link FileIsolationContext}.
+ * Describe how a {@link StorageStore} should be handled by the {@link LibraryManager} with {@link StorageIsolationContext}.
  */
 public enum StorePolicy {
 
     /**
-     * The {@link FileStore} can only be used within {@link LibraryManager}. Any attempt to use such {@link FileStore} within a
-     * {@link FileIsolationContext} will be denied.
+     * The {@link StorageStore} can only be used within {@link LibraryManager}. Any attempt to use such {@link StorageStore} within a
+     * {@link StorageIsolationContext} will be denied.
      */
     PRIVATE(false, false),
 
     /**
-     * The {@link FileStore} can be used within a {@link FileIsolationContext} and its content will be copied over the main
+     * The {@link StorageStore} can be used within a {@link StorageIsolationContext} and its content will be copied over the main
      * storage once disposed of, replacing existing files only.
      */
     OVERWRITE(true, true),
 
     /**
-     * The {@link FileStore} can be used within a {@link FileIsolationContext} and its content will completely replace the one
+     * The {@link StorageStore} can be used within a {@link StorageIsolationContext} and its content will completely replace the one
      * present in the main storage, removing every unused files.
      */
     FULL_SWAP(true, true),
 
     /**
-     * The {@link FileStore} is unique to each instance of {@link FileIsolationContext} and its content will be discarded once the
-     * {@link FileIsolationContext} is closed.
+     * The {@link StorageStore} is unique to each instance of {@link StorageIsolationContext} and its content will be discarded once the
+     * {@link StorageIsolationContext} is closed.
      */
     DISCARD(true, false);
 
@@ -43,9 +43,9 @@ public enum StorePolicy {
     }
 
     /**
-     * Check if the current {@link StorePolicy} allows a {@link FileStore} to be used within a {@link FileIsolationContext}.
+     * Check if the current {@link StorePolicy} allows a {@link StorageStore} to be used within a {@link StorageIsolationContext}.
      *
-     * @return True if it allows usage within a {@link FileIsolationContext}, false otherwise.
+     * @return True if it allows usage within a {@link StorageIsolationContext}, false otherwise.
      */
     public boolean allowIsolation() {
 
@@ -53,10 +53,10 @@ public enum StorePolicy {
     }
 
     /**
-     * Check if the current {@link StorePolicy} allows a {@link FileIsolationContext} content to be retrieved into the main
-     * {@link FileStore}.
+     * Check if the current {@link StorePolicy} allows a {@link StorageIsolationContext} content to be retrieved into the main
+     * {@link StorageStore}.
      *
-     * @return True if it allows content within a {@link FileIsolationContext} to be retrieved, false otherwise.
+     * @return True if it allows content within a {@link StorageIsolationContext} to be retrieved, false otherwise.
      */
     public boolean allowEditingFile() {
 

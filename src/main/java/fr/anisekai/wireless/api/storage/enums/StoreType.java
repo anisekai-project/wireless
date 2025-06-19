@@ -2,25 +2,25 @@ package fr.anisekai.wireless.api.storage.enums;
 
 import fr.anisekai.wireless.api.persistence.interfaces.Entity;
 import fr.anisekai.wireless.api.services.Transmission;
-import fr.anisekai.wireless.api.storage.interfaces.FileStore;
+import fr.anisekai.wireless.api.storage.interfaces.StorageStore;
 
 /**
- * Enums representing one of the type possible for a {@link FileStore}
+ * Enums representing one of the type possible for a {@link StorageStore}
  */
 public enum StoreType {
 
     /**
-     * The {@link FileStore} is a reference to a directory containing one directory for each {@link Entity}.
+     * The {@link StorageStore} is a reference to a directory containing one directory for each {@link Entity}.
      */
     ENTITY_DIRECTORY(true),
 
     /**
-     * The {@link FileStore} is a reference to a directory containing one file for each {@link Entity}.
+     * The {@link StorageStore} is a reference to a directory containing one file for each {@link Entity}.
      */
     ENTITY_FILE(true),
 
     /**
-     * The {@link FileStore} is a reference to a directory without proper structure. Most of the time used for
+     * The {@link StorageStore} is a reference to a directory without proper structure. Most of the time used for
      * {@link Transmission} downloads or temporary files.
      */
     RAW(false);

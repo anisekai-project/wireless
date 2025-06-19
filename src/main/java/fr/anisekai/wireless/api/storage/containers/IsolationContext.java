@@ -1,16 +1,16 @@
 package fr.anisekai.wireless.api.storage.containers;
 
-import fr.anisekai.wireless.api.storage.LibraryManager;
-import fr.anisekai.wireless.api.storage.interfaces.FileIsolationContext;
+import fr.anisekai.wireless.api.storage.interfaces.StorageIsolationAware;
+import fr.anisekai.wireless.api.storage.interfaces.StorageIsolationContext;
 
 /**
- * Default implementation of a {@link FileIsolationContext}.
+ * Default implementation of a {@link StorageIsolationContext}.
  *
- * @param manager
- *         The {@link LibraryManager} that created this {@link FileIsolationContext}.
+ * @param owner
+ *         The {@link StorageIsolationAware} that created this {@link StorageIsolationContext}.
  * @param name
- *         The name of this {@link FileIsolationContext}
+ *         The name of this {@link StorageIsolationContext}
  */
-public record IsolationContext(LibraryManager manager, String name) implements FileIsolationContext {
+public record IsolationContext(StorageIsolationAware owner, String name) implements StorageIsolationContext {
 
 }

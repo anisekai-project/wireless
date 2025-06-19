@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 public interface ScopedEntity {
 
     /**
-     * Retrieve the name representing this {@link ScopedEntity} to use while querying {@link FileStore}.
+     * Retrieve the name representing this {@link ScopedEntity} to use while querying {@link StorageStore}.
      *
      * @return The scoped name.
      */

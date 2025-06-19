@@ -1,16 +1,16 @@
 package fr.anisekai.wireless.api.storage.containers.stores;
 
 import fr.anisekai.wireless.api.storage.enums.StoreType;
-import fr.anisekai.wireless.api.storage.interfaces.FileStore;
 import fr.anisekai.wireless.api.storage.interfaces.ScopedEntity;
+import fr.anisekai.wireless.api.storage.interfaces.StorageStore;
 
 /**
- * Implementation of {@link FileStore} for {@link StoreType#RAW}.
+ * Implementation of {@link StorageStore} for {@link StoreType#RAW}.
  *
  * @param name
- *         The name of the {@link FileStore}.
+ *         The name of the {@link StorageStore}.
  */
-public record RawFileStore(String name) implements FileStore {
+public record RawStorageStore(String name) implements StorageStore {
 
     @Override
     public String name() {
@@ -27,13 +27,13 @@ public record RawFileStore(String name) implements FileStore {
     @Override
     public Class<? extends ScopedEntity> entityClass() {
 
-        throw new UnsupportedOperationException("This FileStore does not support AccessScopeEntity");
+        throw new UnsupportedOperationException("This store does not support scoped access");
     }
 
     @Override
     public String extension() {
 
-        throw new UnsupportedOperationException("This FileStore does not support extension");
+        throw new UnsupportedOperationException("This store does not support extension");
     }
 
 }

@@ -1,9 +1,9 @@
 package fr.anisekai.wireless.api.storage.exceptions;
 
-import fr.anisekai.wireless.api.storage.interfaces.FileIsolationContext;
+import fr.anisekai.wireless.api.storage.interfaces.StorageIsolationContext;
 
 /**
- * Exception thrown when an error occurs while a {@link FileIsolationContext} is being discarded. This exception will always have
+ * Exception thrown when an error occurs while a {@link StorageIsolationContext} is being discarded. This exception will always have
  * a cause.
  */
 public class ContextDiscardException extends RuntimeException {

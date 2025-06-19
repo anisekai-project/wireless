@@ -1,74 +1,74 @@
 package fr.anisekai.wireless.api.storage.containers;
 
 import fr.anisekai.wireless.api.storage.exceptions.ScopeDefinitionException;
-import fr.anisekai.wireless.api.storage.interfaces.FileIsolationContext;
-import fr.anisekai.wireless.api.storage.interfaces.FileStore;
 import fr.anisekai.wireless.api.storage.interfaces.ScopedEntity;
+import fr.anisekai.wireless.api.storage.interfaces.StorageIsolationContext;
+import fr.anisekai.wireless.api.storage.interfaces.StorageStore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- * Represent an access scope within a {@link FileStore} granted for a {@link FileIsolationContext}.
+ * Represent an access scope within a {@link StorageStore} granted for a {@link StorageIsolationContext}.
  */
 public final class AccessScope {
 
     private static final Pattern CLAIM_PATTERN = Pattern.compile("[a-zA-Z0-9_-]+");
 
-    private final FileStore    fileStore;
+    private final StorageStore storageStore;
     private final ScopedEntity claim;
 
     /**
-     * Create a new {@link AccessScope} on the provided {@link FileStore} targeting the {@link ScopedEntity}.
+     * Create a new {@link AccessScope} on the provided {@link StorageStore} targeting the {@link ScopedEntity}.
      *
-     * @param fileStore
-     *         The {@link FileStore} on which the scope is effective.
+     * @param storageStore
+     *         The {@link StorageStore} on which the scope is effective.
      * @param entity
      *         The {@link ScopedEntity} on which the scope is effective.
      */
-    public AccessScope(@NotNull FileStore fileStore, @NotNull ScopedEntity entity) {
+    public AccessScope(@NotNull StorageStore storageStore, @NotNull ScopedEntity entity) {
 
-        this.fileStore = fileStore;
-        this.claim     = entity;
+        this.storageStore = storageStore;
+        this.claim        = entity;
 
-        if (!this.getFileStore().type().isEntityScoped()) {
+        if (!this.getStore().type().isEntityScoped()) {
             throw new ScopeDefinitionException(String.format(
                     "Scopes cannot be used with '%s' store, as it is a non-scoped store.",
-                    this.getFileStore().name()
+                    this.getStore().name()
             ));
         }
 
-        if (!this.getFileStore().entityClass().equals(entity.getClass())) {
+        if (!this.getStore().entityClass().equals(entity.getClass())) {
             throw new ScopeDefinitionException(String.format(
                     "Cannot create a scope on store '%s' using entity type '%s' (expecting type '%s')",
-                    this.getFileStore().name(),
+                    this.getStore().name(),
                     entity.getClass().getSimpleName(),
-                    this.getFileStore().entityClass().getSimpleName()
+                    this.getStore().entityClass().getSimpleName()
             ));
         }
 
         if (!CLAIM_PATTERN.matcher(this.claim.getScopedName()).matches()) {
             throw new ScopeDefinitionException(String.format(
                     "Scoped entity name '%s' does not match expected format %s",
-                    this.getFileStore().name(),
+                    this.getStore().name(),
                     CLAIM_PATTERN.pattern()
             ));
         }
     }
 
     /**
-     * Retrieve the {@link FileStore} on which this {@link AccessScope} is effective.
+     * Retrieve the {@link StorageStore} on which this {@link AccessScope} is effective.
      *
-     * @return A {@link FileStore}
+     * @return A {@link StorageStore}
      */
-    public FileStore getFileStore() {
+    public StorageStore getStore() {
 
-        return this.fileStore;
+        return this.storageStore;
     }
 
     /**
-     * Retrieve the {@link ScopedEntity} within the {@link FileStore} on which this {@link AccessScope} is effective.
+     * Retrieve the {@link ScopedEntity} within the {@link StorageStore} on which this {@link AccessScope} is effective.
      *
      * @return An {@link ScopedEntity}.
      */
@@ -83,7 +83,7 @@ public final class AccessScope {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (AccessScope) obj;
-        return Objects.equals(this.fileStore, that.fileStore) &&
+        return Objects.equals(this.storageStore, that.storageStore) &&
                 Objects.equals(this.claim.getClass(), that.claim.getClass()) &&
                 Objects.equals(this.claim.getScopedName(), that.claim.getScopedName());
     }
@@ -91,13 +91,13 @@ public final class AccessScope {
     @Override
     public int hashCode() {
 
-        return Objects.hash(this.fileStore, this.claim);
+        return Objects.hash(this.storageStore, this.claim);
     }
 
     @Override
     public String toString() {
 
-        return String.format("Scope[%s:%s]", this.fileStore.name(), this.claim.getScopedName());
+        return String.format("Scope[%s:%s]", this.storageStore.name(), this.claim.getScopedName());
     }
 
 }
