@@ -16,7 +16,7 @@ import java.io.File;
  * @param extension
  *         Extension for every {@link File} contained in this {@link StorageStore}.
  */
-public record EntityStorageStore(
+public record EntityFileStore(
         String name,
         Class<? extends ScopedEntity> entityClass,
         String extension

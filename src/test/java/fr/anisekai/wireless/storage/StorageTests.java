@@ -3,7 +3,7 @@ package fr.anisekai.wireless.storage;
 import fr.anisekai.wireless.api.storage.LibraryManager;
 import fr.anisekai.wireless.api.storage.containers.AccessScope;
 import fr.anisekai.wireless.api.storage.containers.stores.EntityDirectoryStore;
-import fr.anisekai.wireless.api.storage.containers.stores.EntityStorageStore;
+import fr.anisekai.wireless.api.storage.containers.stores.EntityFileStore;
 import fr.anisekai.wireless.api.storage.containers.stores.RawStorageStore;
 import fr.anisekai.wireless.api.storage.enums.StorePolicy;
 import fr.anisekai.wireless.api.storage.exceptions.*;
@@ -42,7 +42,7 @@ public class StorageTests {
 
     private static StorageStore randomFileStore(Class<? extends ScopedEntity> entityClass) {
 
-        return new EntityStorageStore(LibraryManager.getRandomName(), entityClass, "txt");
+        return new EntityFileStore(LibraryManager.getRandomName(), entityClass, "txt");
     }
 
     @Test
