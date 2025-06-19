@@ -520,7 +520,18 @@ public class LibraryManager {
         }
 
         File fStore = findTarget(this.root, store, entity);
-        return new File(fStore, name);
+        File target = new File(fStore, name);
+
+        if (!FileUtils.isDirectChild(fStore, target)) {
+            throw new StoreBreakoutException(String.format(
+                    "Destination out-of-bound with filename '%s' for entity '%s' within the '%s' store.",
+                    name,
+                    entity.getScopedName(),
+                    store.name()
+            ));
+        }
+
+        return target;
     }
 
     /**

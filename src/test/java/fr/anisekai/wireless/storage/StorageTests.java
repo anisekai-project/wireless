@@ -806,6 +806,57 @@ public class StorageTests {
         Assertions.assertFalse(localFile.exists());
     }
 
+    @Test
+    @DisplayName("File Access Boundaries")
+    public void testFileAccessBoundaries() {
+
+        File           testData = new File("test-data");
+        File           library  = new File(testData, "library");
+        LibraryManager manager  = new LibraryManager(library);
+
+        ScopedEntity entity      = new ScopedEntityA("1");
+        String       oobFilename = "../escape-path.txt";
+        String       filename    = "normal.txt";
+        String       veryMeanOob = ".txt/../../escape-path.txt";
+
+        FileStore scopedStore = randomDirStore(ScopedEntityA.class);
+        FileStore rawStore    = randomRaw();
+
+        manager.register(scopedStore, StorePolicy.OVERWRITE);
+        manager.register(rawStore, StorePolicy.DISCARD);
+
+        AccessScope scope = new AccessScope(scopedStore, entity);
+
+        File file, storeRoot;
+
+        // Test library boundaries
+        storeRoot = Assertions.assertDoesNotThrow(() -> manager.getStoreFile(rawStore));
+        file      = Assertions.assertDoesNotThrow(() -> manager.getStoreFile(rawStore, filename));
+        Assertions.assertTrue(FileUtils.isDirectChild(storeRoot, file));
+
+        storeRoot = Assertions.assertDoesNotThrow(() -> manager.getStoreFile(scopedStore, entity));
+        file      = Assertions.assertDoesNotThrow(() -> manager.getStoreFile(scopedStore, entity, filename));
+        Assertions.assertTrue(FileUtils.isDirectChild(storeRoot, file));
+
+        Assertions.assertThrows(StoreBreakoutException.class, () -> manager.getStoreFile(rawStore, oobFilename));
+        Assertions.assertThrows(StoreBreakoutException.class, () -> manager.getStoreFile(scopedStore, entity, oobFilename));
+        Assertions.assertThrows(StoreBreakoutException.class, () -> manager.getStoreFile(rawStore, veryMeanOob));
+        Assertions.assertThrows(StoreBreakoutException.class, () -> manager.getStoreFile(scopedStore, entity, veryMeanOob));
+
+        // Test isolation boundaries
+        try (FileIsolationContext context = manager.createIsolation(scope)) {
+
+            storeRoot = Assertions.assertDoesNotThrow(() -> context.getStoreFile(scopedStore, entity));
+            file      = Assertions.assertDoesNotThrow(() -> context.getStoreFile(scopedStore, entity, filename));
+            Assertions.assertTrue(FileUtils.isDirectChild(storeRoot, file));
+
+            Assertions.assertThrows(StoreBreakoutException.class, () -> context.getStoreFile(scopedStore, entity, oobFilename));
+            Assertions.assertThrows(StoreBreakoutException.class, () -> context.requestTemporaryFile(veryMeanOob));
+        }
+
+    }
+
+
     @AfterEach
     public void cleanup() throws IOException {
 
