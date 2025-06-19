@@ -11,6 +11,7 @@ import java.util.List;
 
 @DisplayName("Proxy")
 @Tags({@Tag("unit-test"), @Tag("entity-proxy")})
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 public class ProxyTests {
 
     private static final String TEST_VAL_STR_1 = "unit test";

@@ -11,9 +11,9 @@ import org.junit.jupiter.api.*;
 import java.io.File;
 import java.util.Map;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Media (ffmpeg)")
 @Tags({@Tag("slow-test"), @Tag("ffmpeg")})
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 public class MediaTests {
 
     public static final String TEST_DATA_DIR    = "test-data";
@@ -38,7 +38,6 @@ public class MediaTests {
         return file;
     }
 
-    @Order(1)
     @Test
     @DisplayName("ffprobe | Read MKV Data")
     public void testProbeFile() {
@@ -52,7 +51,6 @@ public class MediaTests {
         Assertions.assertEquals(2, media.getStreams(CodecType.SUBTITLE).size(), "Audio stream count mismatch");
     }
 
-    @Order(2)
     @Test
     @DisplayName("ffmpeg | Codec passthrough")
     public void testPassthrough() {
@@ -83,7 +81,6 @@ public class MediaTests {
         Assertions.assertTrue(subs2.exists(), "Subs(2) file mismatch");
     }
 
-    @Order(3)
     @Test
     @DisplayName("ffmpeg | Create MPD")
     public void testMPD() {
@@ -103,7 +100,6 @@ public class MediaTests {
         Assertions.assertTrue(mpd.exists(), "MPD metadata not at the right output");
     }
 
-    @Order(4)
     @Test
     @DisplayName("ffmpeg | MKV to split converted files")
     public void testExplode() {
@@ -132,7 +128,6 @@ public class MediaTests {
         Assertions.assertTrue(subs2.exists(), "Subs(2) file mismatch");
     }
 
-    @Order(5)
     @Test
     @DisplayName("ffmpeg | Split files to MKV")
     public void testCombine() {
@@ -174,7 +169,6 @@ public class MediaTests {
         Assertions.assertEquals(2, merged.getStreams(CodecType.SUBTITLE).size(), "Audio stream count mismatch");
     }
 
-    @Order(6)
     @Test
     @DisplayName("ffmpeg | Codec passthrough + ignore")
     public void testPassthroughWithIgnore() {
@@ -205,8 +199,6 @@ public class MediaTests {
         Assertions.assertFalse(subs2.exists(), "Subs(2) file mismatch");
     }
 
-
-    @Order(7)
     @Test
     @DisplayName("ffprobe | Simple conversion (without subs)")
     public void testSimpleConvert() {

@@ -170,7 +170,7 @@ public class Transmission {
     /**
      * Retrieve the RPC Endpoint for the transmission daemon server.
      *
-     * @return An url
+     * @return A URL
      */
     public String getEndpoint() {
 
@@ -332,7 +332,7 @@ public class Transmission {
         String       result   = response.getString("result");
 
         if (!result.equals("success")) {
-            throw new IllegalStateException("Transmission client failed to start torrent");
+            throw new IllegalStateException("Transmission client failed to queue torrent");
         }
 
         AnisekaiJson arguments = response.readJson("arguments");
@@ -401,7 +401,7 @@ public class Transmission {
         String       result   = response.getString("result");
 
         if (!result.equals("success")) {
-            throw new IllegalStateException("Transmission client failed to start torrent");
+            throw new IllegalStateException("Transmission client failed to delete torrent");
         }
     }
 

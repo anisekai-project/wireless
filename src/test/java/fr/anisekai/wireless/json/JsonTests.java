@@ -12,6 +12,7 @@ import org.junit.jupiter.api.*;
 
 @DisplayName("JSON")
 @Tags({@Tag("unit-test"), @Tag("json")})
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 public class JsonTests {
 
     @Test

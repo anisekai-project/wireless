@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 
 @DisplayName("SimpleScheduler")
 @Tags({@Tag("unit-test"), @Tag("event-scheduler")})
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 public class EventSchedulerTests {
 
     private static class Manager implements SchedulerManager<TestWatchTarget, TestWatchParty, TestWatchParty> {
