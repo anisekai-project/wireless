@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Record holding the data related to a {@link StorageIsolationContext} and its {@link AccessScope}.
+ * Class holding the data related to a {@link StorageIsolationContext} and its {@link AccessScope}.
  */
 public final class IsolationContextHolder implements StorageAware, IsolationScopeEntity {
 
@@ -236,7 +236,7 @@ public final class IsolationContextHolder implements StorageAware, IsolationScop
     public String toString() {
 
         return String.format(
-                "IsolationContextHolder{name='%s', root=%S, isolation=%s, committed=%s}",
+                "IsolationContextHolder{name='%s', root=%s, isolation=%s, committed=%s}",
                 this.name(),
                 this.root(),
                 this.isolation,

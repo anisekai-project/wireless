@@ -51,7 +51,7 @@ public final class AccessScope {
         if (!CLAIM_PATTERN.matcher(this.claim.getScopedName()).matches()) {
             throw new ScopeDefinitionException(String.format(
                     "Scoped entity name '%s' does not match expected format %s",
-                    this.getStore().name(),
+                    this.claim.getScopedName(),
                     CLAIM_PATTERN.pattern()
             ));
         }
@@ -91,7 +91,7 @@ public final class AccessScope {
     @Override
     public int hashCode() {
 
-        return Objects.hash(this.storageStore, this.claim);
+        return Objects.hash(this.storageStore, this.claim.getClass(), this.claim.getScopedName());
     }
 
     @Override

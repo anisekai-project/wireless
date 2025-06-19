@@ -59,7 +59,7 @@ public record StoragePathResolver(Path root) implements StorageAware {
         return walked;
     }
 
-    private Path internalResolveFile(StorageStore store, String filename, boolean isScoped) {
+    private Path scopedResolveFile(StorageStore store, String filename, boolean isScoped) {
 
         if (store.type().isEntityScoped() != isScoped) {
             throw new StorageAccessException(String.format(
@@ -132,14 +132,14 @@ public record StoragePathResolver(Path root) implements StorageAware {
     @Override
     public Path resolveFile(StorageStore store, String filename) {
 
-        return this.internalResolveFile(store, filename, false);
+        return this.scopedResolveFile(store, filename, false);
     }
 
     @Override
     public Path resolveFile(StorageStore store, ScopedEntity entity) {
 
         String filename = String.format("%s.%s", entity.getScopedName(), store.extension());
-        return this.internalResolveFile(store, filename, true);
+        return this.scopedResolveFile(store, filename, true);
     }
 
     @Override
