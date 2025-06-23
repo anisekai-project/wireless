@@ -103,7 +103,7 @@ public enum Codec {
     /**
      * Special codec meant to be used with ffmpeg to copy the input without conversion.
      */
-    SUBTITLES_COPY(CodecType.SUBTITLE);
+    SUBTITLE_COPY(CodecType.SUBTITLE);
     // </editor-fold>
 
     private final CodecType type;
@@ -147,7 +147,7 @@ public enum Codec {
             case PGS -> "sup";
             case DVB_SUB -> "sub";
             case SSA -> "ssa";
-            case AUDIO_COPY, VIDEO_COPY, SUBTITLES_COPY ->
+            case AUDIO_COPY, VIDEO_COPY, SUBTITLE_COPY ->
                     throw new IllegalStateException("*_COPY codecs are special codec and thus does not support file extensions");
         };
     }
@@ -180,7 +180,7 @@ public enum Codec {
             case PGS -> "pgssub";
             case DVB_SUB -> "dvbsub";
             case SSA -> "ssa";
-            case VIDEO_COPY, AUDIO_COPY, SUBTITLES_COPY -> "copy";
+            case VIDEO_COPY, AUDIO_COPY, SUBTITLE_COPY -> "copy";
         };
     }
 
@@ -224,7 +224,7 @@ public enum Codec {
             case ASS, SSA -> "text/x-ssa";
             case PGS -> "application/pgs";
             case DVB_SUB -> "application/dvbsubs";
-            case VIDEO_COPY, AUDIO_COPY, SUBTITLES_COPY ->
+            case VIDEO_COPY, AUDIO_COPY, SUBTITLE_COPY ->
                     throw new IllegalStateException("*_COPY codecs are special codec and thus does not support mime type");
         };
     }
@@ -237,7 +237,7 @@ public enum Codec {
     public boolean isCopyCodec() {
 
         return switch (this) {
-            case VIDEO_COPY, AUDIO_COPY, SUBTITLES_COPY -> true;
+            case VIDEO_COPY, AUDIO_COPY, SUBTITLE_COPY -> true;
             default -> false;
         };
     }

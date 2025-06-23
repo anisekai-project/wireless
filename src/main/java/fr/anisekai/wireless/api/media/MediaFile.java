@@ -9,9 +9,11 @@ import fr.anisekai.wireless.api.media.enums.CodecType;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -34,9 +36,10 @@ public final class MediaFile {
      * @throws InterruptedException
      *         Threw if the probing process is interrupted.
      */
-    public static MediaFile of(File file) throws IOException, InterruptedException {
+    public static MediaFile of(Path file) throws IOException, InterruptedException {
 
-        AnisekaiJson     json    = FFMpeg.probe(file);
+        AnisekaiJson json = FFMpeg.probe(file).intoTemporary().timeout(1, TimeUnit.MINUTES).run();
+
         Set<MediaStream> streams = new HashSet<>();
 
         AnisekaiArray streamArray = json.readArray("streams");
@@ -57,23 +60,23 @@ public final class MediaFile {
         return new MediaFile(file, streams);
     }
 
-    private final File             file;
+    private final Path             path;
     private final Set<MediaStream> streams;
 
-    private MediaFile(File file, Set<MediaStream> streams) {
+    private MediaFile(Path path, Set<MediaStream> streams) {
 
-        this.file    = file;
+        this.path    = path.toAbsolutePath().normalize();
         this.streams = Collections.unmodifiableSet(streams);
     }
 
     /**
      * Retrieve the physical file associated with this {@link MediaFile}.
      *
-     * @return The underlying {@link File}.
+     * @return The underlying {@link Path}.
      */
-    public File getFile() {
+    public Path getPath() {
 
-        return this.file;
+        return this.path;
     }
 
     /**

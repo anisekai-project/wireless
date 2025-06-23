@@ -517,7 +517,7 @@ public class AnisekaiJson extends JSONObject {
      */
     public ZonedDateTime readZonedDateTime(@NotNull String path) {
 
-        return this.getOptionalZonedDateTime(path).orElseThrow(() -> new JSONException("[%s] not found."));
+        return this.getOptionalZonedDateTime(path).orElseThrow(() -> new JSONException("[%s] not found.".formatted(path)));
     }
 
     /**
@@ -530,7 +530,7 @@ public class AnisekaiJson extends JSONObject {
      */
     public AnisekaiArray readArray(@NotNull String path) {
 
-        return this.getOptionalArray(path).orElseThrow(() -> new JSONException("[%s] not found."));
+        return this.getOptionalArray(path).orElseThrow(() -> new JSONException("[%s] not found.".formatted(path)));
     }
 
     /**
@@ -543,7 +543,7 @@ public class AnisekaiJson extends JSONObject {
      */
     public AnisekaiJson readJson(@NotNull String path) {
 
-        return this.getOptionalJson(path).orElseThrow(() -> new JSONException("[%s] not found."));
+        return this.getOptionalJson(path).orElseThrow(() -> new JSONException("[%s] not found.".formatted(path)));
     }
 
     /**
@@ -560,7 +560,7 @@ public class AnisekaiJson extends JSONObject {
      */
     public <T> List<T> readList(@NotNull String path, @NotNull Function<AnisekaiJson, T> mapper) {
 
-        return this.getOptionalList(path, mapper).orElseThrow(() -> new JSONException("[%s] not found."));
+        return this.getOptionalList(path, mapper).orElseThrow(() -> new JSONException("[%s] not found.".formatted(path)));
     }
 
     /**
@@ -577,7 +577,7 @@ public class AnisekaiJson extends JSONObject {
      */
     public <T> T read(@NotNull String path, @NotNull Function<AnisekaiJson, T> mapper) {
 
-        return this.getOptional(path, mapper).orElseThrow(() -> new JSONException("[%s] not found."));
+        return this.getOptional(path, mapper).orElseThrow(() -> new JSONException("[%s] not found.".formatted(path)));
     }
 
     // </editor-fold>

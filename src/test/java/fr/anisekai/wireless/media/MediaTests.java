@@ -6,10 +6,14 @@ import fr.anisekai.wireless.api.media.MediaStream;
 import fr.anisekai.wireless.api.media.bin.FFMpeg;
 import fr.anisekai.wireless.api.media.enums.Codec;
 import fr.anisekai.wireless.api.media.enums.CodecType;
+import fr.anisekai.wireless.utils.FileUtils;
 import org.junit.jupiter.api.*;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @DisplayName("Media (ffmpeg)")
 @Tags({@Tag("slow-test"), @Tag("ffmpeg")})
@@ -29,20 +33,20 @@ public class MediaTests {
     public static final String TEST_DATA_RES_SUBS_1  = "3.ass";
     public static final String TEST_DATA_RES_SUBS_2  = "4.ass";
 
-    private static File getTestFile(String name, boolean require) {
+    private static Path getTestFile(String name, boolean require) {
 
-        File dataDir = new File(TEST_DATA_DIR);
-        if (!dataDir.exists()) throw new RuntimeException("Unable to locate test data directory");
-        File file = new File(dataDir, name);
-        if (!file.exists() && require) throw new RuntimeException("Unable to locate test data file " + name);
-        return file;
+        Path dataDir = Path.of(TEST_DATA_DIR);
+        if (!Files.isDirectory(dataDir)) throw new RuntimeException("Unable to locate test data directory");
+        Path path = dataDir.resolve(name);
+        if (!Files.exists(path) && require) throw new RuntimeException("Unable to locate test data file " + name);
+        return path;
     }
 
     @Test
     @DisplayName("ffprobe | Read MKV Data")
     public void testProbeFile() {
 
-        File      target = getTestFile(TEST_DATA_FILE, true);
+        Path      target = getTestFile(TEST_DATA_FILE, true);
         MediaFile media  = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
 
         Assertions.assertEquals(5, media.getStreams().size(), "Media stream count mismatch");
@@ -55,98 +59,114 @@ public class MediaTests {
     @DisplayName("ffmpeg | Codec passthrough")
     public void testPassthrough() {
 
-        File video  = getTestFile(TEST_DATA_RES_VIDEO, false);
-        File audio1 = getTestFile(TEST_DATA_EXT_AUDIO_1, false);
-        File audio2 = getTestFile(TEST_DATA_EXT_AUDIO_2, false);
-        File subs1  = getTestFile(TEST_DATA_RES_SUBS_1, false);
-        File subs2  = getTestFile(TEST_DATA_RES_SUBS_2, false);
+        Path video  = getTestFile(TEST_DATA_RES_VIDEO, false);
+        Path audio1 = getTestFile(TEST_DATA_EXT_AUDIO_1, false);
+        Path audio2 = getTestFile(TEST_DATA_EXT_AUDIO_2, false);
+        Path subs1  = getTestFile(TEST_DATA_RES_SUBS_1, false);
+        Path subs2  = getTestFile(TEST_DATA_RES_SUBS_2, false);
 
-        File      target = getTestFile(TEST_DATA_FILE, true);
+        Path      target = getTestFile(TEST_DATA_FILE, true);
         MediaFile media  = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
 
-        Map<MediaStream, File> files = Assertions.assertDoesNotThrow(() -> FFMpeg.explode(
-                media,
-                Codec.VIDEO_COPY,
-                Codec.AUDIO_COPY,
-                Codec.SUBTITLES_COPY,
-                1
-        ));
+
+        Map<MediaStream, Path> files = Assertions.assertDoesNotThrow(() -> FFMpeg
+                .convert(media)
+                .copyVideo()
+                .copyAudio()
+                .copySubtitle()
+                .into(target.getParent())
+                .split().
+                timeout(1, TimeUnit.MINUTES)
+                .run());
 
         Assertions.assertEquals(5, files.size(), "File count mismatch");
 
-        Assertions.assertTrue(video.exists(), "Video file mismatch");
-        Assertions.assertTrue(audio1.exists(), "Audio(1) file mismatch");
-        Assertions.assertTrue(audio2.exists(), "Audio(2) file mismatch");
-        Assertions.assertTrue(subs1.exists(), "Subs(1) file mismatch");
-        Assertions.assertTrue(subs2.exists(), "Subs(2) file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(video), "Video file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(audio1), "Audio(1) file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(audio2), "Audio(2) file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(subs1), "Subs(1) file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(subs2), "Subs(2) file mismatch");
     }
 
     @Test
     @DisplayName("ffmpeg | Create MPD")
-    public void testMPD() {
+    public void testMPD() throws IOException {
 
-        File target    = getTestFile(TEST_DATA_FILE, true);
-        File outputDir = getTestFile(TEST_DATA_MPD, true);
-        File mpd       = new File(outputDir, "meta.mpd");
+        Path target         = getTestFile(TEST_DATA_FILE, true);
+        Path outputDir      = getTestFile(TEST_DATA_MPD, false);
+        Path expectedOutput = outputDir.resolve("meta.mpd");
 
         MediaFile media = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
 
-        File file = Assertions.assertDoesNotThrow(() -> FFMpeg.createMpd(
-                media,
-                outputDir
-        ));
+        FileUtils.ensureDirectory(outputDir);
 
-        Assertions.assertTrue(file.exists(), "MPD metadata file does not exist");
-        Assertions.assertTrue(mpd.exists(), "MPD metadata not at the right output");
+        Path mdp = Assertions.assertDoesNotThrow(() -> FFMpeg
+                .mdp(media)
+                .into(outputDir)
+                .as("meta.mpd")
+                .timeout(1, TimeUnit.MINUTES)
+                .run());
+
+        Assertions.assertTrue(Files.isRegularFile(mdp), "MPD metadata file does not exist");
+        Assertions.assertTrue(Files.isRegularFile(expectedOutput), "MPD metadata not at the right output");
     }
 
     @Test
     @DisplayName("ffmpeg | MKV to split converted files")
     public void testExplode() {
 
-        File video  = getTestFile(TEST_DATA_RES_VIDEO, false);
-        File audio1 = getTestFile(TEST_DATA_RES_AUDIO_1, false);
-        File audio2 = getTestFile(TEST_DATA_RES_AUDIO_2, false);
-        File subs1  = getTestFile(TEST_DATA_RES_SUBS_1, false);
-        File subs2  = getTestFile(TEST_DATA_RES_SUBS_2, false);
+        Path video  = getTestFile(TEST_DATA_RES_VIDEO, false);
+        Path audio1 = getTestFile(TEST_DATA_RES_AUDIO_1, false);
+        Path audio2 = getTestFile(TEST_DATA_RES_AUDIO_2, false);
+        Path subs1  = getTestFile(TEST_DATA_RES_SUBS_1, false);
+        Path subs2  = getTestFile(TEST_DATA_RES_SUBS_2, false);
 
-        File      target = getTestFile(TEST_DATA_FILE, true);
+        Path      target = getTestFile(TEST_DATA_FILE, true);
         MediaFile media  = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
-        Map<MediaStream, File> files = Assertions.assertDoesNotThrow(() -> FFMpeg.explode(
-                media,
-                Codec.H264,
-                Codec.VORBIS,
-                Codec.SUBTITLES_COPY,
-                1
-        ));
+
+        Map<MediaStream, Path> files = Assertions.assertDoesNotThrow(() -> FFMpeg
+                .convert(media)
+                .video(Codec.H264)
+                .audio(Codec.VORBIS)
+                .copySubtitle()
+                .into(target.getParent())
+                .split().
+                timeout(2, TimeUnit.MINUTES)
+                .run());
 
         Assertions.assertEquals(5, files.size(), "File count mismatch");
-        Assertions.assertTrue(video.exists(), "Video file mismatch");
-        Assertions.assertTrue(audio1.exists(), "Audio(1) file mismatch");
-        Assertions.assertTrue(audio2.exists(), "Audio(2) file mismatch");
-        Assertions.assertTrue(subs1.exists(), "Subs(1) file mismatch");
-        Assertions.assertTrue(subs2.exists(), "Subs(2) file mismatch");
+
+        Assertions.assertTrue(Files.isRegularFile(video), "Video file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(audio1), "Audio(1) file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(audio2), "Audio(2) file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(subs1), "Subs(1) file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(subs2), "Subs(2) file mismatch");
     }
 
     @Test
     @DisplayName("ffmpeg | Split files to MKV")
     public void testCombine() {
 
-        File      target = getTestFile(TEST_DATA_FILE, true);
-        MediaFile media  = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
-        Map<MediaStream, File> files = Assertions.assertDoesNotThrow(() -> FFMpeg.explode(
-                media,
-                Codec.VIDEO_COPY,
-                Codec.AUDIO_COPY,
-                Codec.SUBTITLES_COPY,
-                1
-        ));
+        Path target = getTestFile(TEST_DATA_FILE, true);
+        Path output = getTestFile(TEST_OUTPUT_FILE, false);
 
-        File video  = getTestFile(TEST_DATA_RES_VIDEO, false);
-        File audio1 = getTestFile(TEST_DATA_EXT_AUDIO_1, false);
-        File audio2 = getTestFile(TEST_DATA_EXT_AUDIO_2, false);
-        File subs1  = getTestFile(TEST_DATA_RES_SUBS_1, false);
-        File subs2  = getTestFile(TEST_DATA_RES_SUBS_2, false);
+        MediaFile media = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
+
+        Map<MediaStream, Path> files = Assertions.assertDoesNotThrow(() -> FFMpeg
+                .convert(media)
+                .copyVideo()
+                .copyAudio()
+                .copySubtitle()
+                .into(output.getParent())
+                .split()
+                .timeout(1, TimeUnit.MINUTES)
+                .run());
+
+        Path video  = getTestFile(TEST_DATA_RES_VIDEO, false);
+        Path audio1 = getTestFile(TEST_DATA_EXT_AUDIO_1, false);
+        Path audio2 = getTestFile(TEST_DATA_EXT_AUDIO_2, false);
+        Path subs1  = getTestFile(TEST_DATA_RES_SUBS_1, false);
+        Path subs2  = getTestFile(TEST_DATA_RES_SUBS_2, false);
 
         MediaMeta videoMeta  = new MediaMeta(video, CodecType.VIDEO, null, null);
         MediaMeta audio1Meta = new MediaMeta(audio1, CodecType.AUDIO, "Français", "fre");
@@ -154,14 +174,18 @@ public class MediaTests {
         MediaMeta subs1Meta  = new MediaMeta(subs1, CodecType.SUBTITLE, "Français (Forced)", "fre");
         MediaMeta subs2Meta  = new MediaMeta(subs2, CodecType.SUBTITLE, "Français", "fre");
 
-        File output = Assertions.assertDoesNotThrow(() -> FFMpeg.combine(
-                videoMeta,
-                audio2Meta,
-                audio1Meta,
-                subs2Meta,
-                subs1Meta
-        ));
-        MediaFile merged = Assertions.assertDoesNotThrow(() -> MediaFile.of(output));
+
+        Path result = Assertions.assertDoesNotThrow(() -> FFMpeg
+                .combine(videoMeta)
+                .with(audio1Meta)
+                .with(audio2Meta)
+                .with(subs1Meta)
+                .with(subs2Meta)
+                .file(output)
+                .timeout(1, TimeUnit.MINUTES)
+                .run()
+        );
+        MediaFile merged = Assertions.assertDoesNotThrow(() -> MediaFile.of(result));
 
         Assertions.assertEquals(5, merged.getStreams().size(), "Media stream count mismatch");
         Assertions.assertEquals(1, merged.getStreams(CodecType.VIDEO).size(), "Video stream count mismatch");
@@ -173,41 +197,52 @@ public class MediaTests {
     @DisplayName("ffmpeg | Codec passthrough + ignore")
     public void testPassthroughWithIgnore() {
 
-        File video  = getTestFile(TEST_DATA_RES_VIDEO, false);
-        File audio1 = getTestFile(TEST_DATA_EXT_AUDIO_1, false);
-        File audio2 = getTestFile(TEST_DATA_EXT_AUDIO_2, false);
-        File subs1  = getTestFile(TEST_DATA_RES_SUBS_1, false);
-        File subs2  = getTestFile(TEST_DATA_RES_SUBS_2, false);
+        Path video  = getTestFile(TEST_DATA_RES_VIDEO, false);
+        Path audio1 = getTestFile(TEST_DATA_EXT_AUDIO_1, false);
+        Path audio2 = getTestFile(TEST_DATA_EXT_AUDIO_2, false);
+        Path subs1  = getTestFile(TEST_DATA_RES_SUBS_1, false);
+        Path subs2  = getTestFile(TEST_DATA_RES_SUBS_2, false);
 
-        File      target = getTestFile(TEST_DATA_FILE, true);
+        Path      target = getTestFile(TEST_DATA_FILE, true);
         MediaFile media  = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
 
-        Map<MediaStream, File> files = Assertions.assertDoesNotThrow(() -> FFMpeg.explode(
-                media,
-                null,
-                Codec.AUDIO_COPY,
-                null,
-                1
-        ));
+        Map<MediaStream, Path> files = Assertions.assertDoesNotThrow(() -> FFMpeg
+                .convert(media)
+                .noVideo()
+                .copyAudio()
+                .noSubtitle()
+                .into(target.getParent())
+                .split()
+                .timeout(1, TimeUnit.MINUTES)
+                .run());
 
         Assertions.assertEquals(2, files.size(), "File count mismatch");
 
-        Assertions.assertFalse(video.exists(), "Video file mismatch");
-        Assertions.assertTrue(audio1.exists(), "Audio(1) file mismatch");
-        Assertions.assertTrue(audio2.exists(), "Audio(2) file mismatch");
-        Assertions.assertFalse(subs1.exists(), "Subs(1) file mismatch");
-        Assertions.assertFalse(subs2.exists(), "Subs(2) file mismatch");
+        Assertions.assertFalse(Files.isRegularFile(video), "Video file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(audio1), "Audio(1) file mismatch");
+        Assertions.assertTrue(Files.isRegularFile(audio2), "Audio(2) file mismatch");
+        Assertions.assertFalse(Files.isRegularFile(subs1), "Subs(1) file mismatch");
+        Assertions.assertFalse(Files.isRegularFile(subs2), "Subs(2) file mismatch");
     }
 
     @Test
     @DisplayName("ffprobe | Simple conversion (without subs)")
     public void testSimpleConvert() {
 
-        File target = getTestFile(TEST_DATA_FILE, true);
-        File output = getTestFile(TEST_OUTPUT_FILE, false);
+        Path target = getTestFile(TEST_DATA_FILE, true);
+        Path output = getTestFile(TEST_OUTPUT_FILE, false);
 
         MediaFile media = Assertions.assertDoesNotThrow(() -> MediaFile.of(target));
-        Assertions.assertDoesNotThrow(() -> FFMpeg.convert(media, Codec.H264, Codec.AAC, null, output, 1));
+
+        Assertions.assertDoesNotThrow(() -> FFMpeg
+                .convert(media)
+                .video(Codec.H264)
+                .audio(Codec.AAC)
+                .noSubtitle()
+                .file(output)
+                .timeout(2, TimeUnit.MINUTES)
+                .run()
+        );
 
         MediaFile outputMedia = Assertions.assertDoesNotThrow(() -> MediaFile.of(output));
         Assertions.assertEquals(3, outputMedia.getStreams().size(), "Streams count mismatch");
@@ -221,32 +256,27 @@ public class MediaTests {
     }
 
     @AfterEach
-    public void onTestFinished() {
+    public void onTestFinished() throws IOException {
 
-        File output    = getTestFile(TEST_OUTPUT_FILE, false);
-        File video     = getTestFile(TEST_DATA_RES_VIDEO, false);
-        File resAudio1 = getTestFile(TEST_DATA_RES_AUDIO_1, false);
-        File resAudio2 = getTestFile(TEST_DATA_RES_AUDIO_2, false);
-        File extAudio1 = getTestFile(TEST_DATA_EXT_AUDIO_1, false);
-        File extAudio2 = getTestFile(TEST_DATA_EXT_AUDIO_2, false);
-        File subs1     = getTestFile(TEST_DATA_RES_SUBS_1, false);
-        File subs2     = getTestFile(TEST_DATA_RES_SUBS_2, false);
-        File mpd       = getTestFile(TEST_DATA_MPD, false);
+        Path output    = getTestFile(TEST_OUTPUT_FILE, false);
+        Path video     = getTestFile(TEST_DATA_RES_VIDEO, false);
+        Path resAudio1 = getTestFile(TEST_DATA_RES_AUDIO_1, false);
+        Path resAudio2 = getTestFile(TEST_DATA_RES_AUDIO_2, false);
+        Path extAudio1 = getTestFile(TEST_DATA_EXT_AUDIO_1, false);
+        Path extAudio2 = getTestFile(TEST_DATA_EXT_AUDIO_2, false);
+        Path subs1     = getTestFile(TEST_DATA_RES_SUBS_1, false);
+        Path subs2     = getTestFile(TEST_DATA_RES_SUBS_2, false);
+        Path mpd       = getTestFile(TEST_DATA_MPD, false);
 
-        if (output.exists()) output.delete();
-        if (video.exists()) video.delete();
-        if (resAudio1.exists()) resAudio1.delete();
-        if (resAudio2.exists()) resAudio2.delete();
-        if (extAudio1.exists()) extAudio1.delete();
-        if (extAudio2.exists()) extAudio2.delete();
-        if (subs1.exists()) subs1.delete();
-        if (subs2.exists()) subs2.delete();
-
-        if (mpd.exists()) {
-            for (File file : mpd.listFiles()) {
-                file.delete();
-            }
-        }
+        FileUtils.delete(output);
+        FileUtils.delete(video);
+        FileUtils.delete(resAudio1);
+        FileUtils.delete(resAudio2);
+        FileUtils.delete(extAudio1);
+        FileUtils.delete(extAudio2);
+        FileUtils.delete(subs1);
+        FileUtils.delete(subs2);
+        FileUtils.delete(mpd);
     }
 
 }

@@ -1,11 +1,10 @@
 package fr.anisekai.wireless.api.media;
 
 import fr.anisekai.wireless.api.media.bin.FFMpeg;
-import fr.anisekai.wireless.api.media.enums.Codec;
 import fr.anisekai.wireless.api.media.enums.CodecType;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,11 +14,11 @@ import java.util.Map;
  * Represents a single media track (such as audio, video, or subtitle) used to reassemble a complete media file.
  * <p>
  * This class encapsulates the metadata of a media file, including its file path, optional name, language, and codec. It is
- * typically used as input for the {@link FFMpeg#combine(MediaMeta...)} method to combine tracks into a unified media container.
+ * typically used as input for the {@link FFMpeg#combine(MediaMeta)} method to combine tracks into a unified media container.
  */
 public class MediaMeta {
 
-    private final File                file;
+    private final Path                path;
     private final CodecType           type;
     private final Map<String, String> metadata;
     private final List<String>        dispositions;
@@ -27,7 +26,7 @@ public class MediaMeta {
     /**
      * Create a {@link MediaMeta} instance for a given media file with optional metadata.
      *
-     * @param file
+     * @param path
      *         The media file.
      * @param type
      *         The {@link CodecType} for this {@link MediaMeta}.
@@ -39,9 +38,9 @@ public class MediaMeta {
      * @throws IllegalArgumentException
      *         Threw if the codec cannot be determined from the file extension.
      */
-    public MediaMeta(File file, CodecType type, @Nullable String name, @Nullable String language) {
+    public MediaMeta(Path path, CodecType type, @Nullable String name, @Nullable String language) {
 
-        this.file         = file;
+        this.path         = path.toAbsolutePath().normalize();
         this.type         = type;
         this.metadata     = new HashMap<>();
         this.dispositions = new ArrayList<>();
@@ -58,11 +57,11 @@ public class MediaMeta {
     /**
      * Retrieve the media file associated with this track.
      *
-     * @return The {@link File} representing the media track.
+     * @return The {@link Path} representing the media track.
      */
-    public File getFile() {
+    public Path getPath() {
 
-        return this.file;
+        return this.path;
     }
 
     /**

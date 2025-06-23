@@ -1,9 +1,7 @@
 package fr.anisekai.wireless.api.media.bin;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +34,7 @@ public class Binary {
 
     private final List<String> args;
     private final List<String> holdArgs;
-    private       File         baseDir = null;
+    private       Path         baseDir = null;
 
     /**
      * Create a new {@link Binary} instance
@@ -55,9 +53,9 @@ public class Binary {
      * Set the base directory (working directory) for this {@link Binary} execution.
      *
      * @param baseDir
-     *         The {@link File} pointing to the base directory.
+     *         The {@link Path} pointing to the base directory.
      */
-    public void setBaseDir(File baseDir) {
+    public void setBaseDir(Path baseDir) {
 
         this.baseDir = baseDir;
     }
@@ -138,28 +136,26 @@ public class Binary {
         // Commit hold args
         this.commitHoldArguments();
 
-        String[] array = this.args.toArray(String[]::new);
+        ProcessBuilder builder = new ProcessBuilder(this.args);
 
-        Runtime runtime = Runtime.getRuntime();
-        Process process = runtime.exec(array, null, this.baseDir);
+        if (this.baseDir != null) {
+            builder.directory(this.baseDir.toFile());
+        }
 
-        drainAsync(process.getInputStream());
-        drainAsync(process.getErrorStream());
+        builder.redirectError(ProcessBuilder.Redirect.DISCARD);
+        builder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
 
-        boolean exited = process.waitFor(timeout, unit);
+        Process process = builder.start();
 
-        if (!exited) throw new IllegalStateException("Process timed out");
+        process.getOutputStream().close();
+
+        boolean exitedNormally = process.waitFor(timeout, unit);
+
+        if (!exitedNormally) {
+            process.destroyForcibly();
+            throw new IllegalStateException("Process timed out");
+        }
         return process.exitValue();
-    }
-
-    private static void drainAsync(InputStream input) {
-
-        new Thread(() -> {
-            try (input) {
-                input.transferTo(OutputStream.nullOutputStream());
-            } catch (IOException ignore) {
-            }
-        }).start();
     }
 
 }
