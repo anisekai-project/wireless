@@ -27,6 +27,10 @@ public enum Codec {
      */
     AV1(CodecType.VIDEO),
     /**
+     * HEVC Video Codec
+     */
+    HEVC(CodecType.VIDEO),
+    /**
      * Special codec meant to be used with ffmpeg to copy the input without conversion.
      */
     VIDEO_COPY(CodecType.VIDEO),
@@ -131,7 +135,7 @@ public enum Codec {
     public String getExtension() {
 
         return switch (this) {
-            case H264, H265 -> "mp4";
+            case H264, H265, HEVC -> "mp4";
             case VP9 -> "webm";
             case AV1 -> "mkv";
             case AAC, ALAC -> "m4a";
@@ -163,6 +167,7 @@ public enum Codec {
         return switch (this) {
             case H264 -> "libx264";
             case H265 -> "libx265";
+            case HEVC -> "hevc";
             case VP9 -> "libvpx-vp9";
             case AV1 -> "libaom-av1";
             case AAC -> "aac";
@@ -210,7 +215,7 @@ public enum Codec {
     public String getMimeType() {
 
         return switch (this) {
-            case H264, H265 -> "video/mp4";
+            case H264, H265, HEVC -> "video/mp4";
             case VP9, AV1 -> "video/webm";
             case AAC, ALAC -> "audio/mp4";
             case MP3 -> "audio/mpeg";
