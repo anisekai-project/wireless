@@ -85,9 +85,9 @@ public enum Codec {
 
     // <editor-fold desc="Subtitles Codecs">
     /**
-     * SRT Subtitles Codec
+     * SUBRIP Subtitles Codec
      */
-    SRT(CodecType.SUBTITLE),
+    SUBRIP(CodecType.SUBTITLE),
     /**
      * ASS Subtitles Codec
      */
@@ -146,7 +146,7 @@ public enum Codec {
             case EAC3 -> "eac3";
             case DTS -> "dts";
             case TRUEHD -> "mlp";
-            case SRT -> "srt";
+            case SUBRIP -> "srt";
             case ASS -> "ass";
             case PGS -> "sup";
             case DVB_SUB -> "sub";
@@ -180,7 +180,7 @@ public enum Codec {
             case DTS -> "libdts";
             case TRUEHD -> "truedts";
             case ALAC -> "alac";
-            case SRT -> "srt";
+            case SUBRIP -> "srt";
             case ASS -> "ass";
             case PGS -> "pgssub";
             case DVB_SUB -> "dvbsub";
@@ -225,7 +225,7 @@ public enum Codec {
             case EAC3 -> "audio/eac3";
             case DTS -> "audio/vnd.dts";
             case TRUEHD -> "audio/mlp";
-            case SRT -> "application/x-subrip";
+            case SUBRIP -> "application/x-subrip";
             case ASS, SSA -> "text/x-ssa";
             case PGS -> "application/pgs";
             case DVB_SUB -> "application/dvbsubs";
