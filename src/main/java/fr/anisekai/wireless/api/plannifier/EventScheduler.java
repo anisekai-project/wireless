@@ -184,7 +184,7 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
             E prev = optPrev.get();
             E next = optNext.get();
 
-            long newCount = prev.getEpisodeCount() + spot.getEpisodeCount() + next.getEpisodeCount();
+            int newCount = prev.getEpisodeCount() + spot.getEpisodeCount() + next.getEpisodeCount();
 
             E updated = this.getManager().update(prev, item -> item.setEpisodeCount(newCount));
 
@@ -199,7 +199,7 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
         if (isPrevCombinable) {
 
             E    prev     = optPrev.get();
-            long newCount = prev.getEpisodeCount() + spot.getEpisodeCount();
+            int newCount = prev.getEpisodeCount() + spot.getEpisodeCount();
 
             E updated = this.getManager().update(prev, item -> item.setEpisodeCount(newCount));
 
@@ -211,8 +211,8 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
         if (isNextCombinable) {
 
             E    next     = optNext.get();
-            long newCount = next.getEpisodeCount() + spot.getEpisodeCount();
-            long firstEpisode = optTargetPrev
+            int newCount = next.getEpisodeCount() + spot.getEpisodeCount();
+            int firstEpisode = optTargetPrev
                     .map(item -> item.getFirstEpisode() + item.getEpisodeCount())
                     .orElseGet(() -> spot.getWatchTarget().getWatched() + 1);
 
@@ -284,14 +284,14 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
         int deleteCount = 0;
 
         // Store the max possible episode for each target
-        Map<T, Long> targetMaxEpisode = this.getState()
+        Map<T, Integer> targetMaxEpisode = this.getState()
                                             .stream()
                                             .map(ScheduleSpotData::getWatchTarget)
                                             .distinct()
                                             .collect(new MapCollector<>(WatchTarget::getTotal));
 
         // Store the progress for each target
-        Map<T, Long> targetProgression = this.getState()
+        Map<T, Integer> targetProgression = this.getState()
                                              .stream()
                                              .map(ScheduleSpotData::getWatchTarget)
                                              .distinct()
@@ -304,8 +304,8 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
 
         for (E event : sorted) {
 
-            long maxEpisode  = targetMaxEpisode.get(event.getWatchTarget());
-            long progression = targetProgression.get(event.getWatchTarget());
+            int maxEpisode  = targetMaxEpisode.get(event.getWatchTarget());
+            int progression = targetProgression.get(event.getWatchTarget());
 
             if (maxEpisode < 0) { // Support for "estimate" amount of episode, which are represented by negative number.
                 maxEpisode = maxEpisode * -1;
@@ -314,8 +314,8 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
             boolean correctFirstEpisode = event.getFirstEpisode() == progression + 1;
             boolean correctEpisodeCount = (event.getFirstEpisode() + event.getEpisodeCount()) - 1 <= maxEpisode;
 
-            long fixedFirstEpisode = progression + 1;
-            long fixedEpisodeCount = Math.min(maxEpisode - progression, event.getEpisodeCount());
+            int fixedFirstEpisode = progression + 1;
+            int fixedEpisodeCount = Math.min(maxEpisode - progression, event.getEpisodeCount());
 
             // Don't keep overflowing events
             if (fixedFirstEpisode > maxEpisode) {

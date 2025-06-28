@@ -55,7 +55,7 @@ public interface ScheduleSpotData<T extends WatchTarget> {
      *
      * @return The amount of episode that will be watched.
      */
-    long getEpisodeCount();
+    int getEpisodeCount();
 
     /**
      * Define the amount of episode that will be watched during this {@link ScheduleSpotData}. If not applicable, just set 1.
@@ -63,7 +63,7 @@ public interface ScheduleSpotData<T extends WatchTarget> {
      * @param episodeCount
      *         The amount of episode that will be watched.
      */
-    void setEpisodeCount(long episodeCount);
+    void setEpisodeCount(int episodeCount);
 
     /**
      * Check if skips for opening and ending are enabled. Check {@link #setSkipEnabled(boolean)} for more details.
@@ -111,8 +111,8 @@ public interface ScheduleSpotData<T extends WatchTarget> {
 
         if (this.getEpisodeCount() == 1) return Duration.ofMinutes(this.getWatchTarget().getEpisodeDuration());
 
-        long totalRuntime       = this.getWatchTarget().getEpisodeDuration() * this.getEpisodeCount();
-        long superfluousRuntime = this.isSkipEnabled() ? (this.getEpisodeCount() - 1) * 3 : 0;
+        int totalRuntime       = this.getWatchTarget().getEpisodeDuration() * this.getEpisodeCount();
+        int superfluousRuntime = this.isSkipEnabled() ? (this.getEpisodeCount() - 1) * 3 : 0;
 
         return Duration.ofMinutes(totalRuntime - superfluousRuntime);
     }

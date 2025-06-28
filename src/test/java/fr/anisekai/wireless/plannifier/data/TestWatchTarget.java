@@ -6,12 +6,12 @@ import java.util.Objects;
 
 public class TestWatchTarget implements WatchTarget {
 
-    private final long id;
-    private       long watched;
-    private       long total;
-    private       long episodeDuration = TestData.EPISODE_DURATION_MINUTES;
+    private final int id;
+    private       int watched;
+    private       int total;
+    private       int episodeDuration = TestData.EPISODE_DURATION_MINUTES;
 
-    public TestWatchTarget(long id, long watched, long total) {
+    public TestWatchTarget(int id, int watched, int total) {
 
         this.id      = id;
         this.watched = watched;
@@ -19,37 +19,37 @@ public class TestWatchTarget implements WatchTarget {
     }
 
     @Override
-    public long getWatched() {
+    public int getWatched() {
 
         return this.watched;
     }
 
     @Override
-    public void setWatched(long watched) {
+    public void setWatched(int watched) {
 
         this.watched = watched;
     }
 
     @Override
-    public long getTotal() {
+    public int getTotal() {
 
         return this.total;
     }
 
     @Override
-    public void setTotal(long total) {
+    public void setTotal(int total) {
 
         this.total = total;
     }
 
     @Override
-    public long getEpisodeDuration() {
+    public int getEpisodeDuration() {
 
         return this.episodeDuration;
     }
 
     @Override
-    public void setEpisodeDuration(long episodeDuration) {
+    public void setEpisodeDuration(int episodeDuration) {
 
         this.episodeDuration = episodeDuration;
     }

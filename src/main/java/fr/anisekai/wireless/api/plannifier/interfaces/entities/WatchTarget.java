@@ -21,7 +21,7 @@ public interface WatchTarget {
      *
      * @return Number of episode watched.
      */
-    long getWatched();
+    int getWatched();
 
     /**
      * Define the number of episode watched for this {@link WatchTarget}.
@@ -29,7 +29,7 @@ public interface WatchTarget {
      * @param watched
      *         Number of episode watched.
      */
-    void setWatched(long watched);
+    void setWatched(int watched);
 
     /**
      * Retrieve the total amount of episode for this {@link WatchTarget}. Negative values will be used for a temporary estimation
@@ -37,7 +37,7 @@ public interface WatchTarget {
      *
      * @return Number of episode in total
      */
-    long getTotal();
+    int getTotal();
 
     /**
      * Define the number of episode in total.
@@ -45,14 +45,14 @@ public interface WatchTarget {
      * @param total
      *         Number of episode in total
      */
-    void setTotal(long total);
+    void setTotal(int total);
 
     /**
      * Retrieve the duration of one episode.
      *
      * @return Duration of one episode.
      */
-    long getEpisodeDuration();
+    int getEpisodeDuration();
 
     /**
      * Retrieve the duration of one episode.
@@ -60,6 +60,6 @@ public interface WatchTarget {
      * @param episodeDuration
      *         Duration of one episode.
      */
-    void setEpisodeDuration(long episodeDuration);
+    void setEpisodeDuration(int episodeDuration);
 
 }

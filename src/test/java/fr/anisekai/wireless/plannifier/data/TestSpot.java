@@ -9,10 +9,10 @@ public class TestSpot implements ScheduleSpotData<TestWatchTarget> {
 
     private final TestWatchTarget target;
     private final ZonedDateTime   startingAt;
-    private final long            episodeCount;
+    private final int            episodeCount;
     private final boolean         skipEnabled;
 
-    public TestSpot(TestWatchTarget target, ZonedDateTime startingAt, long episodeCount) {
+    public TestSpot(TestWatchTarget target, ZonedDateTime startingAt, int episodeCount) {
 
         this.target       = target;
         this.startingAt   = startingAt;
@@ -43,13 +43,13 @@ public class TestSpot implements ScheduleSpotData<TestWatchTarget> {
     }
 
     @Override
-    public long getEpisodeCount() {
+    public int getEpisodeCount() {
 
         return this.episodeCount;
     }
 
     @Override
-    public void setEpisodeCount(long episodeCount) {
+    public void setEpisodeCount(int episodeCount) {
 
     }
 

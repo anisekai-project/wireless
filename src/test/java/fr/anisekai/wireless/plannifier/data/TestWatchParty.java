@@ -8,16 +8,16 @@ import java.util.Objects;
 
 public class TestWatchParty implements Planifiable<TestWatchTarget> {
 
-    private final long            id;
+    private final int            id;
     private final TestWatchTarget target;
-    private       long            firstEpisode;
+    private       int            firstEpisode;
     private       ZonedDateTime   startingAt;
-    private       long            episodeCount;
+    private       int            episodeCount;
     private       boolean         skipEnabled;
 
     private boolean deleted = false;
 
-    public TestWatchParty(long id, TestWatchTarget target, long firstEpisode, ZonedDateTime startingAt, long episodeCount, boolean skipEnabled) {
+    public TestWatchParty(int id, TestWatchTarget target, int firstEpisode, ZonedDateTime startingAt, int episodeCount, boolean skipEnabled) {
 
         this.id           = id;
         this.target       = target;
@@ -28,13 +28,13 @@ public class TestWatchParty implements Planifiable<TestWatchTarget> {
     }
 
     @Override
-    public long getFirstEpisode() {
+    public int getFirstEpisode() {
 
         return this.firstEpisode;
     }
 
     @Override
-    public void setFirstEpisode(long firstEpisode) {
+    public void setFirstEpisode(int firstEpisode) {
 
         this.firstEpisode = firstEpisode;
     }
@@ -63,13 +63,13 @@ public class TestWatchParty implements Planifiable<TestWatchTarget> {
     }
 
     @Override
-    public long getEpisodeCount() {
+    public int getEpisodeCount() {
 
         return this.episodeCount;
     }
 
     @Override
-    public void setEpisodeCount(long episodeCount) {
+    public void setEpisodeCount(int episodeCount) {
 
         this.episodeCount = episodeCount;
     }

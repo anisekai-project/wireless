@@ -5,12 +5,12 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 public class TestData {
 
-    public static final long EPISODE_DURATION_MINUTES = 24;
+    public static final int EPISODE_DURATION_MINUTES = 24;
 
     public static final ZonedDateTime BASE_DATETIME = ZonedDateTime.of(
             LocalDate.of(2024, 1, 1),
@@ -19,15 +19,15 @@ public class TestData {
     );
 
     // <editor-fold desc="Factory">
-    private final AtomicLong    autoTargetId = new AtomicLong(1);
-    private final AtomicLong    autoPartyId  = new AtomicLong(1);
+    private final AtomicInteger autoTargetId = new AtomicInteger(1);
+    private final AtomicInteger autoPartyId  = new AtomicInteger(1);
     private       ZonedDateTime baseTime     = BASE_DATETIME;
 
     private TestWatchTarget createTarget() {
         return new TestWatchTarget(this.autoTargetId.getAndIncrement(), 0, 12);
     }
 
-    private TestWatchParty createParty(TestWatchTarget target, long firstEpisode, Function<ZonedDateTime, ZonedDateTime> timeSlider) {
+    private TestWatchParty createParty(TestWatchTarget target, int firstEpisode, Function<ZonedDateTime, ZonedDateTime> timeSlider) {
         TestWatchParty party = new TestWatchParty(this.autoPartyId.getAndIncrement(), target, firstEpisode, this.baseTime, 2, true);
         this.baseTime = timeSlider.apply(this.baseTime);
         return party;

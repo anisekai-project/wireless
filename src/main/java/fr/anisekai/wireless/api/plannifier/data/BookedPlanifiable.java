@@ -18,8 +18,8 @@ public class BookedPlanifiable<T extends WatchTarget> implements Planifiable<T> 
 
     private final T             target;
     private       ZonedDateTime startingAt;
-    private       long          firstEpisode;
-    private       long          episodeCount;
+    private       int           firstEpisode;
+    private       int           episodeCount;
     private       boolean       skipEnabled;
 
     /**
@@ -42,7 +42,7 @@ public class BookedPlanifiable<T extends WatchTarget> implements Planifiable<T> 
      *         The first episode number that would be broadcasted by this {@link BookedPlanifiable} once commited to the
      *         {@link SchedulerManager}.
      */
-    public BookedPlanifiable(ScheduleSpotData<T> scheduleSpotData, long firstEpisode) {
+    public BookedPlanifiable(ScheduleSpotData<T> scheduleSpotData, int firstEpisode) {
 
         this.target       = scheduleSpotData.getWatchTarget();
         this.startingAt   = scheduleSpotData.getStartingAt();
@@ -52,13 +52,13 @@ public class BookedPlanifiable<T extends WatchTarget> implements Planifiable<T> 
     }
 
     @Override
-    public long getFirstEpisode() {
+    public int getFirstEpisode() {
 
         return this.firstEpisode;
     }
 
     @Override
-    public void setFirstEpisode(long firstEpisode) {
+    public void setFirstEpisode(int firstEpisode) {
 
         this.firstEpisode = firstEpisode;
     }
@@ -88,13 +88,13 @@ public class BookedPlanifiable<T extends WatchTarget> implements Planifiable<T> 
     }
 
     @Override
-    public long getEpisodeCount() {
+    public int getEpisodeCount() {
 
         return this.episodeCount;
     }
 
     @Override
-    public void setEpisodeCount(long episodeCount) {
+    public void setEpisodeCount(int episodeCount) {
 
         this.episodeCount = episodeCount;
     }
