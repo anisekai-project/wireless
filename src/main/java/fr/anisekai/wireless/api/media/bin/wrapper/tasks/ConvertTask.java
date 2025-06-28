@@ -193,6 +193,7 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
                 ffmpeg, (stream, codec) -> {
                     if (codec.getType() == CodecType.VIDEO) {
                         ffmpeg.addArguments("-crf", 25);
+                        ffmpeg.addArguments("-vf", "format=yuv420p");
                     }
                 }
         );
