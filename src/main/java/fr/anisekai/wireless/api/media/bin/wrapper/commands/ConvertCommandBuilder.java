@@ -6,23 +6,23 @@ import fr.anisekai.wireless.api.media.bin.wrapper.FFMpegCommand;
 import fr.anisekai.wireless.api.media.bin.wrapper.tasks.ConvertTask;
 import fr.anisekai.wireless.api.media.enums.Codec;
 import fr.anisekai.wireless.api.media.enums.CodecType;
+import fr.anisekai.wireless.api.media.interfaces.MediaStreamMapper;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * A {@link FFMpegCommand} builder specifically built to convert a {@link MediaFile} streams into a single or multiple files.
  */
 public class ConvertCommandBuilder {
 
-    private final MediaFile input;
-    private       Codec     video;
-    private       Codec     audio;
-    private       Codec     subtitle;
-    private       Path      outputDir;
+    private final MediaFile         input;
+    private       Codec             video;
+    private       Codec             audio;
+    private       Codec             subtitle;
+    private       Path              outputDir;
+    private       MediaStreamMapper streamMapper = MediaStreamMapper.DEFAULT;
 
     /**
      * Create a new {@link ConvertCommandBuilder} targeting the provided {@link MediaFile}.
@@ -153,9 +153,23 @@ public class ConvertCommandBuilder {
     }
 
     /**
-     * Set the base {@link Path} into which ffmpeg will be run. If using {@link #split()} or {@link #split(BiFunction)}, this will
-     * define the directory into which all files will be extracted. If using {@link #file(String)}, this will be used as the
-     * containing directory to resolve the full path of the output.
+     * Allow to add more ffmpeg option for a specific stream if necessary.
+     *
+     * @param streamMapper
+     *         The {@link MediaStreamMapper} to use to add more options.
+     *
+     * @return The same instance for chaining.
+     */
+    public ConvertCommandBuilder streamMapper(MediaStreamMapper streamMapper) {
+
+        this.streamMapper = streamMapper;
+        return this;
+    }
+
+    /**
+     * Set the base {@link Path} into which ffmpeg will be run. If using {@link #split()}, this will define the directory into
+     * which all files will be extracted. If using {@link #file(String)}, this will be used as the containing directory to resolve
+     * the full path of the output.
      *
      * @param directory
      *         The {@link Path} pointing to a directory.
@@ -210,38 +224,26 @@ public class ConvertCommandBuilder {
                 this.video,
                 this.audio,
                 this.subtitle,
+                this.streamMapper,
                 this.outputDir,
                 filename
         );
     }
 
     /**
-     * Set the default rules of stream naming for the {@link MediaFile} conversion.
+     * Extract the {@link MediaFile} into multiple files. It will create one file for each {@link MediaStream} being managed.
      *
      * @return A {@link FFMpegCommand} ready to convert the {@link MediaFile} streams into separate files.
      */
     public FFMpegCommand<Map<MediaStream, Path>> split() {
-
-        return this.split((stream, codec) -> String.format("%s.%s", stream.getId(), codec.getExtension()));
-    }
-
-    /**
-     * Set a custom rules of stream naming for the {@link MediaFile} conversion.
-     *
-     * @param streamNamingFunction
-     *         The {@link Function} used to name each {@link MediaStream} being converted.
-     *
-     * @return A {@link FFMpegCommand} ready to convert the {@link MediaFile} streams into separate files.
-     */
-    public FFMpegCommand<Map<MediaStream, Path>> split(BiFunction<MediaStream, Codec, String> streamNamingFunction) {
 
         return ConvertTask.of(
                 this.input,
                 this.video,
                 this.audio,
                 this.subtitle,
-                this.outputDir,
-                streamNamingFunction
+                this.streamMapper,
+                this.outputDir
         );
     }
 

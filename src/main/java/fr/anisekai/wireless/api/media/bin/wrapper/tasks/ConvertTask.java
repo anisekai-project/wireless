@@ -6,7 +6,7 @@ import fr.anisekai.wireless.api.media.bin.Binary;
 import fr.anisekai.wireless.api.media.bin.wrapper.FFMpegCommand;
 import fr.anisekai.wireless.api.media.bin.wrapper.FFMpegCommandTask;
 import fr.anisekai.wireless.api.media.enums.Codec;
-import fr.anisekai.wireless.api.media.enums.CodecType;
+import fr.anisekai.wireless.api.media.interfaces.MediaStreamMapper;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -14,8 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -38,6 +36,8 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
      *         The {@link Codec} to use for the audio.
      * @param subtitle
      *         The {@link Codec} to use for subtitle.
+     * @param streamMapper
+     *         The {@link MediaStreamMapper} to use to add {@link MediaStream} to ffmpeg.
      * @param outputDir
      *         The {@link Path} to use as output directory.
      * @param filename
@@ -45,9 +45,9 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
      *
      * @return A {@link ConvertTask}.
      */
-    public static ConvertTask<Path> of(MediaFile input, Codec video, Codec audio, Codec subtitle, @Nullable Path outputDir, String filename) {
+    public static ConvertTask<Path> of(MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir, String filename) {
 
-        return new ConvertTask<>(ConvertTask::getOutputFile, input, video, audio, subtitle, outputDir, filename);
+        return new ConvertTask<>(ConvertTask::getOutputFile, input, video, audio, subtitle, streamMapper, outputDir, filename);
     }
 
     /**
@@ -61,60 +61,72 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
      *         The {@link Codec} to use for the audio.
      * @param subtitle
      *         The {@link Codec} to use for subtitle.
+     * @param streamMapper
+     *         The {@link MediaStreamMapper} to use to add {@link MediaStream} to ffmpeg.
      * @param outputDir
      *         The {@link Path} to use as output directory.
-     * @param streamNameFunction
-     *         The {@link Function} that define the naming rule of each stream.
      *
      * @return A {@link ConvertTask}.
      */
-    public static ConvertTask<Map<MediaStream, Path>> of(MediaFile input, Codec video, Codec audio, Codec subtitle, @Nullable Path outputDir, BiFunction<MediaStream, Codec, String> streamNameFunction) {
+    public static ConvertTask<Map<MediaStream, Path>> of(MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir) {
 
-        return new ConvertTask<>(ConvertTask::getOutputFiles, input, video, audio, subtitle, outputDir, streamNameFunction);
+        return new ConvertTask<>(ConvertTask::getOutputFiles, input, video, audio, subtitle, streamMapper, outputDir);
     }
 
     private final Function<ConvertTask<?>, T> resolver;
 
-    private final MediaFile input;
-    private final Codec     video;
-    private final Codec     audio;
-    private final Codec     subtitle;
-    private       Path      outputDir;
+    private final MediaFile         input;
+    private final Codec             video;
+    private final Codec             audio;
+    private final Codec             subtitle;
+    private final MediaStreamMapper streamMapper;
+    private       Path              outputDir;
 
-    private final String                                 filename;
-    private final BiFunction<MediaStream, Codec, String> streamNameFunction;
+    private final String filename;
 
     private final Path                   outputFile;
     private final Map<MediaStream, Path> outputFiles;
 
-    private ConvertTask(Function<ConvertTask<?>, T> resolver, MediaFile input, Codec video, Codec audio, Codec subtitle, @Nullable Path outputDir, String filename) {
+    private ConvertTask(Function<ConvertTask<?>, T> resolver, MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir, String filename) {
 
         super(Binary.ffmpeg());
-        this.resolver           = resolver;
-        this.input              = input;
-        this.video              = video;
-        this.audio              = audio;
-        this.subtitle           = subtitle;
-        this.outputDir          = outputDir;
-        this.filename           = filename;
-        this.streamNameFunction = null;
-        this.outputFile         = null;
-        this.outputFiles        = null;
+        this.resolver     = resolver;
+        this.input        = input;
+        this.video        = video;
+        this.audio        = audio;
+        this.subtitle     = subtitle;
+        this.streamMapper = streamMapper;
+        this.outputDir    = outputDir;
+        this.filename     = filename;
+        this.outputFile   = null;
+        this.outputFiles  = null;
     }
 
-    private ConvertTask(Function<ConvertTask<?>, T> resolver, MediaFile input, Codec video, Codec audio, Codec subtitle, @Nullable Path outputDir, BiFunction<MediaStream, Codec, String> streamNameFunction) {
+    private ConvertTask(Function<ConvertTask<?>, T> resolver, MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir) {
 
         super(Binary.ffmpeg());
-        this.resolver           = resolver;
-        this.input              = input;
-        this.video              = video;
-        this.audio              = audio;
-        this.subtitle           = subtitle;
-        this.outputDir          = outputDir;
-        this.filename           = null;
-        this.streamNameFunction = streamNameFunction;
-        this.outputFile         = null;
-        this.outputFiles        = new HashMap<>();
+        this.resolver    = resolver;
+        this.input       = input;
+        this.video       = video;
+        this.audio       = audio;
+        this.subtitle    = subtitle;
+        this.outputDir   = outputDir;
+        this.filename    = null;
+        this.outputFile  = null;
+        this.outputFiles = new HashMap<>();
+
+        this.streamMapper = streamMapper.then((binary, stream, codec) -> {
+            Codec  effectiveCodec = codec.isCopyCodec() ? stream.getCodec() : codec;
+            String filename       = String.format("%s.%s", stream.getId(), effectiveCodec.getExtension());
+
+            Path output = this.outputDir.resolve(filename).normalize();
+            if (!output.startsWith(this.outputDir)) {
+                throw new IllegalArgumentException("Illegal filename: " + filename);
+            }
+
+            binary.addArgument(output.getFileName().toString());
+            this.outputFiles.put(stream, output);
+        });
     }
 
     private Path getOutputFile() {
@@ -132,29 +144,22 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
      *
      * @param ffmpeg
      *         The {@link Binary} into which the arguments will be appended.
-     * @param onStreamAdded
-     *         The {@link BiConsumer} called when a stream get added with a specific codec.
      */
-    public void mapStreams(Binary ffmpeg, BiConsumer<MediaStream, Codec> onStreamAdded) {
-
-        BiConsumer<MediaStream, Codec> codecMapper = ((stream, codec) -> {
-            ffmpeg.addArguments("-map", "0:%s".formatted(stream.getId()));
-            ffmpeg.addArguments("-c:%s".formatted(codec.getType().getChar()), codec.getLibName());
-        });
+    public void mapStreams(Binary ffmpeg) {
 
         for (MediaStream stream : this.input.getStreams()) {
             switch (stream.getCodec().getType()) {
                 case VIDEO -> {
                     if (this.video == null) continue;
-                    codecMapper.andThen(onStreamAdded).accept(stream, this.video);
+                    this.streamMapper.map(ffmpeg, stream, this.video);
                 }
                 case AUDIO -> {
                     if (this.audio == null) continue;
-                    codecMapper.andThen(onStreamAdded).accept(stream, this.audio);
+                    this.streamMapper.map(ffmpeg, stream, this.audio);
                 }
                 case SUBTITLE -> {
                     if (this.subtitle == null) continue;
-                    codecMapper.andThen(onStreamAdded).accept(stream, this.subtitle);
+                    this.streamMapper.map(ffmpeg, stream, this.subtitle);
                 }
             }
         }
@@ -170,15 +175,11 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
         ffmpeg.setBaseDir(this.outputDir);
         ffmpeg.addArguments("-i", this.input.getPath().toString());
 
-        if (this.filename == null && this.streamNameFunction != null) {
-            this.preprocessMultipleFile(ffmpeg);
-            return;
-        } else if (this.filename != null && this.streamNameFunction == null) {
+        if (this.filename != null) {
             this.preprocessSingleFile(ffmpeg);
-            return;
+        } else {
+            this.preprocessMultipleFile(ffmpeg);
         }
-
-        throw new IllegalStateException("Could not determine how to run ffmpeg");
     }
 
     private void preprocessSingleFile(Binary ffmpeg) {
@@ -189,38 +190,13 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
             throw new IllegalArgumentException("Invalid filename: " + this.filename);
         }
 
-        this.mapStreams(
-                ffmpeg, (stream, codec) -> {
-                    if (codec.getType() == CodecType.VIDEO) {
-                        ffmpeg.addArguments("-crf", 25);
-                        ffmpeg.addArguments("-vf", "format=yuv420p");
-                    }
-                }
-        );
-
+        this.mapStreams(ffmpeg);
         ffmpeg.addArgument(outputFile.toString());
     }
 
     private void preprocessMultipleFile(Binary ffmpeg) throws IOException {
 
-        this.mapStreams(
-                ffmpeg, (stream, codec) -> {
-                    if (codec.getType() == CodecType.VIDEO) {
-                        ffmpeg.addArguments("-crf", 25);
-                    }
-
-                    Codec  effectiveCodec = codec.isCopyCodec() ? stream.getCodec() : codec;
-                    String filename       = this.streamNameFunction.apply(stream, effectiveCodec);
-
-                    Path output = this.outputDir.resolve(filename).normalize();
-                    if (!output.startsWith(this.outputDir)) {
-                        throw new IllegalArgumentException("Illegal filename: " + filename);
-                    }
-
-                    ffmpeg.addArgument(output.getFileName().toString());
-                    this.outputFiles.put(stream, output);
-                }
-        );
+        this.mapStreams(ffmpeg);
 
         // Ensure outputs do not exist or ffmpeg is going to make a whim
         for (Path outputFile : this.outputFiles.values()) {

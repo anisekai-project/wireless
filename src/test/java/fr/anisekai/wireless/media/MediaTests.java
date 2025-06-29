@@ -75,8 +75,8 @@ public class MediaTests {
                 .copyAudio()
                 .copySubtitle()
                 .into(target.getParent())
-                .split().
-                timeout(1, TimeUnit.MINUTES)
+                .split()
+                .timeout(1, TimeUnit.MINUTES)
                 .run());
 
         Assertions.assertEquals(5, files.size(), "File count mismatch");
@@ -130,8 +130,8 @@ public class MediaTests {
                 .audio(Codec.VORBIS)
                 .copySubtitle()
                 .into(target.getParent())
-                .split().
-                timeout(2, TimeUnit.MINUTES)
+                .split()
+                .timeout(2, TimeUnit.MINUTES)
                 .run());
 
         Assertions.assertEquals(5, files.size(), "File count mismatch");
