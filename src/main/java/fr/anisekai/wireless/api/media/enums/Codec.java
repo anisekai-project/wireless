@@ -31,6 +31,14 @@ public enum Codec {
      */
     HEVC(CodecType.VIDEO),
     /**
+     * PNG Video Codec
+     */
+    PNG(CodecType.VIDEO),
+    /**
+     * MJPEG Video Codec
+     */
+    MJPEG(CodecType.VIDEO),
+    /**
      * Special codec meant to be used with ffmpeg to copy the input without conversion.
      */
     VIDEO_COPY(CodecType.VIDEO),
@@ -153,6 +161,9 @@ public enum Codec {
             case SSA -> "ssa";
             case AUDIO_COPY, VIDEO_COPY, SUBTITLE_COPY ->
                     throw new IllegalStateException("*_COPY codecs are special codec and thus does not support file extensions");
+            // This feel so wrong
+            case PNG -> "png";
+            case MJPEG -> "jpg";
         };
     }
 
@@ -186,6 +197,9 @@ public enum Codec {
             case DVB_SUB -> "dvbsub";
             case SSA -> "ssa";
             case VIDEO_COPY, AUDIO_COPY, SUBTITLE_COPY -> "copy";
+            // This feel so wrong
+            case PNG -> "libpng";
+            case MJPEG -> "libjpeg";
         };
     }
 
@@ -231,6 +245,9 @@ public enum Codec {
             case DVB_SUB -> "application/dvbsubs";
             case VIDEO_COPY, AUDIO_COPY, SUBTITLE_COPY ->
                     throw new IllegalStateException("*_COPY codecs are special codec and thus does not support mime type");
+            // This feel so wrong
+            case PNG -> "image/png";
+            case MJPEG -> "image/jpeg";
         };
     }
 
