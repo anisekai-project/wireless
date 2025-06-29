@@ -4,10 +4,8 @@ import fr.anisekai.wireless.api.media.enums.Codec;
 import fr.anisekai.wireless.api.media.enums.Disposition;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,10 +13,10 @@ import java.util.Map;
  */
 public class MediaStream {
 
-    private final int                 id;
-    private final Codec               codec;
-    private final List<Disposition>   dispositions;
-    private final Map<String, String> metadata;
+    private final int                  id;
+    private final Codec                codec;
+    private final EnumSet<Disposition> dispositions;
+    private final Map<String, String>  metadata;
 
     /**
      * Create a new instance of {@link MediaStream}.
@@ -32,15 +30,17 @@ public class MediaStream {
 
         this.id           = json.getInt("index");
         this.codec        = codec;
-        this.dispositions = new ArrayList<>();
+        this.dispositions = EnumSet.noneOf(Disposition.class);
         this.metadata     = new HashMap<>();
 
         JSONObject dispositionJson = json.getJSONObject("disposition");
 
         for (String key : dispositionJson.keySet()) {
-            Disposition disposition = Disposition.from(key);
-            if (disposition != null) {
-                this.dispositions.add(disposition);
+            if (dispositionJson.getInt(key) == 1) {
+                Disposition disposition = Disposition.from(key);
+                if (disposition != null) {
+                    this.dispositions.add(disposition);
+                }
             }
         }
 
@@ -73,11 +73,11 @@ public class MediaStream {
     }
 
     /**
-     * Retrieve this {@link MediaStream}'s {@link List} of {@link Disposition}s.
+     * Retrieve this {@link MediaStream}'s {@link EnumSet} of {@link Disposition}s.
      *
-     * @return A {@link List} of {@link Disposition}s.
+     * @return An {@link EnumSet} of {@link Disposition}s.
      */
-    public List<Disposition> getDispositions() {
+    public EnumSet<Disposition> getDispositions() {
 
         return this.dispositions;
     }
