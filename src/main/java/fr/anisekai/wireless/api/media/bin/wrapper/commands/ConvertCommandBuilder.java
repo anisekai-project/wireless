@@ -7,6 +7,7 @@ import fr.anisekai.wireless.api.media.bin.wrapper.tasks.ConvertTask;
 import fr.anisekai.wireless.api.media.enums.Codec;
 import fr.anisekai.wireless.api.media.enums.CodecType;
 import fr.anisekai.wireless.api.media.interfaces.MediaStreamMapper;
+import fr.anisekai.wireless.api.media.interfaces.MediaStreamNamer;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +24,7 @@ public class ConvertCommandBuilder {
     private       Codec             subtitle;
     private       Path              outputDir;
     private       MediaStreamMapper streamMapper = MediaStreamMapper.DEFAULT;
+    private       MediaStreamNamer  streamNamer  = MediaStreamNamer.DEFAULT;
 
     /**
      * Create a new {@link ConvertCommandBuilder} targeting the provided {@link MediaFile}.
@@ -167,6 +169,20 @@ public class ConvertCommandBuilder {
     }
 
     /**
+     * Allow to use a custom {@link MediaStreamNamer} to retrieve the output name of a {@link MediaStream}.
+     *
+     * @param streamNamer
+     *         The {@link MediaStreamNamer} to use.
+     *
+     * @return The same instance for chaining.
+     */
+    public ConvertCommandBuilder streamNamer(MediaStreamNamer streamNamer) {
+
+        this.streamNamer = streamNamer;
+        return this;
+    }
+
+    /**
      * Set the base {@link Path} into which ffmpeg will be run. If using {@link #split()}, this will define the directory into
      * which all files will be extracted. If using {@link #file(String)}, this will be used as the containing directory to resolve
      * the full path of the output.
@@ -243,7 +259,8 @@ public class ConvertCommandBuilder {
                 this.audio,
                 this.subtitle,
                 this.streamMapper,
-                this.outputDir
+                this.outputDir,
+                this.streamNamer
         );
     }
 

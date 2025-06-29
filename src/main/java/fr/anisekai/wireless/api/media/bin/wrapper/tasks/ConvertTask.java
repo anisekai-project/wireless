@@ -7,6 +7,7 @@ import fr.anisekai.wireless.api.media.bin.wrapper.FFMpegCommand;
 import fr.anisekai.wireless.api.media.bin.wrapper.FFMpegCommandTask;
 import fr.anisekai.wireless.api.media.enums.Codec;
 import fr.anisekai.wireless.api.media.interfaces.MediaStreamMapper;
+import fr.anisekai.wireless.api.media.interfaces.MediaStreamNamer;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -65,12 +66,23 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
      *         The {@link MediaStreamMapper} to use to add {@link MediaStream} to ffmpeg.
      * @param outputDir
      *         The {@link Path} to use as output directory.
+     * @param streamNamer
+     *         The {@link MediaStreamNamer} to use to get the output name for a {@link MediaStream}.
      *
      * @return A {@link ConvertTask}.
      */
-    public static ConvertTask<Map<MediaStream, Path>> of(MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir) {
+    public static ConvertTask<Map<MediaStream, Path>> of(MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir, MediaStreamNamer streamNamer) {
 
-        return new ConvertTask<>(ConvertTask::getOutputFiles, input, video, audio, subtitle, streamMapper, outputDir);
+        return new ConvertTask<>(
+                ConvertTask::getOutputFiles,
+                input,
+                video,
+                audio,
+                subtitle,
+                streamMapper,
+                outputDir,
+                streamNamer
+        );
     }
 
     private final Function<ConvertTask<?>, T> resolver;
@@ -102,7 +114,7 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
         this.outputFiles  = null;
     }
 
-    private ConvertTask(Function<ConvertTask<?>, T> resolver, MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir) {
+    private ConvertTask(Function<ConvertTask<?>, T> resolver, MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir, MediaStreamNamer streamNamer) {
 
         super(Binary.ffmpeg());
         this.resolver    = resolver;
@@ -116,8 +128,7 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
         this.outputFiles = new HashMap<>();
 
         this.streamMapper = streamMapper.then((binary, stream, codec) -> {
-            Codec  effectiveCodec = codec.isCopyCodec() ? stream.getCodec() : codec;
-            String filename       = String.format("%s.%s", stream.getId(), effectiveCodec.getExtension());
+            String filename = streamNamer.name(stream, codec);
 
             Path output = this.outputDir.resolve(filename).normalize();
             if (!output.startsWith(this.outputDir)) {
