@@ -17,16 +17,63 @@ public final class StringUtils {
      * @param charSequence
      *         The {@link CharSequence} to truncate if necessary
      * @param threshold
-     *         Amount of character max allowed (excluding '...')
+     *         Amount of character max allowed (including '...')
      *
      * @return The {@link CharSequence}, truncated if necessary
      */
     public static String truncate(CharSequence charSequence, int threshold) {
 
+        if (threshold < 3) {
+            throw new IllegalArgumentException("Threshold must be at least 3 to accommodate '...'");
+        }
+
         if (charSequence.length() > threshold) {
-            return charSequence.subSequence(0, threshold) + "...";
+            return charSequence.subSequence(0, threshold - 3) + "...";
         }
         return charSequence.toString();
+    }
+
+    /**
+     * Cut the provided {@link CharSequence} to size, appending '...' within the string to leave {@code after} characters
+     * afterward if its length is above the provided threshold.
+     *
+     * @param charSequence
+     *         The {@link CharSequence} to truncate if necessary
+     * @param threshold
+     *         Amount of character max allowed (including '...')
+     * @param after
+     *         Amount of character to leave after the cut with '...'
+     *
+     * @return The {@link CharSequence}, truncated if necessary
+     */
+    public static String truncate(CharSequence charSequence, int threshold, int after) {
+
+        if (threshold < 0) {
+            throw new IllegalArgumentException("Threshold must be non-negative");
+        }
+
+        if (after < 0) {
+            throw new IllegalArgumentException("After must be non-negative");
+        }
+
+        if (threshold < 3) {
+            throw new IllegalArgumentException("Threshold must be at least 3 to accommodate '...'");
+        }
+
+        if (after >= threshold - 3) {
+            throw new IllegalArgumentException("After must be less than threshold - 3");
+        }
+
+        int length = charSequence.length();
+        if (length <= threshold) {
+            return charSequence.toString();
+        }
+
+        int    prefixLength = threshold - 3 - after;
+        String prefix       = charSequence.subSequence(0, prefixLength).toString();
+        String suffix       = charSequence.subSequence(length - after, length).toString();
+
+        return prefix + "..." + suffix;
     }
 
     /**
