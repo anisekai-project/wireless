@@ -1,5 +1,7 @@
 package fr.anisekai.wireless.remote.interfaces;
 
+import fr.anisekai.wireless.api.media.MediaFile;
+import fr.anisekai.wireless.api.media.MediaStream;
 import fr.anisekai.wireless.api.media.enums.Codec;
 import fr.anisekai.wireless.api.media.enums.CodecType;
 import fr.anisekai.wireless.api.persistence.interfaces.Entity;
@@ -30,6 +32,21 @@ public interface TrackEntity<E extends EpisodeEntity<?>> extends Entity<Long> {
     void setEpisode(@NotNull E episode);
 
     /**
+     * Retrieve this {@link TrackEntity}'s original identifier as a {@link MediaStream} within a {@link MediaFile}.
+     *
+     * @return An id.
+     */
+    int getOriginalId();
+
+    /**
+     * Define this {@link TrackEntity}'s original identifier as a {@link MediaStream} within a {@link MediaFile}.
+     *
+     * @param id
+     *         An id.
+     */
+    void setOriginalId(int id);
+
+    /**
      * Retrieve this {@link TrackEntity}'s name. This will be the name used on the player UI, if applicable.
      *
      * @return A name.
@@ -43,21 +60,6 @@ public interface TrackEntity<E extends EpisodeEntity<?>> extends Entity<Long> {
      *         A name.
      */
     void setName(@NotNull String name);
-
-    /**
-     * Retrieve this {@link TrackEntity}'s label.
-     *
-     * @return A label
-     */
-    String getLabel();
-
-    /**
-     * Define this {@link TrackEntity}'s label.
-     *
-     * @param label
-     *         A label
-     */
-    void setLabel(@NotNull String label);
 
     /**
      * Retrieve this {@link TrackEntity}'s {@link Codec}.
@@ -96,18 +98,17 @@ public interface TrackEntity<E extends EpisodeEntity<?>> extends Entity<Long> {
     void setLanguage(@Nullable String language);
 
     /**
-     * Check if this {@link TrackEntity} is a forced track. Only applicable to {@link CodecType#SUBTITLE}.
+     * Retrieve this {@link TrackEntity} disposition as bit value.
      *
-     * @return True if the {@link TrackEntity} is forced, false otherwise.
+     * @return A bit value.
      */
-    boolean isForced();
+    int getDispositions();
 
     /**
-     * Define if this {@link TrackEntity} is a forced track. Only applicable to {@link CodecType#SUBTITLE}.
+     * Define this {@link TrackEntity} disposition as bit value.
      *
-     * @param forced
-     *         True if the {@link TrackEntity} is forced, false otherwise.
+     * @param dispositions
+     *         A bit value.
      */
-    void setForced(boolean forced);
-
+    void setDispositions(int dispositions);
 }
