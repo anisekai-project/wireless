@@ -46,7 +46,7 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
      *
      * @return A {@link ConvertTask}.
      */
-    public static ConvertTask<Path> of(MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir, String filename) {
+    public static ConvertTask<Path> of(MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, Path outputDir, String filename) {
 
         return new ConvertTask<>(ConvertTask::getOutputFile, input, video, audio, subtitle, streamMapper, outputDir, filename);
     }
@@ -71,7 +71,7 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
      *
      * @return A {@link ConvertTask}.
      */
-    public static ConvertTask<Map<MediaStream, Path>> of(MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir, MediaStreamNamer streamNamer) {
+    public static ConvertTask<Map<MediaStream, Path>> of(MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, Path outputDir, MediaStreamNamer streamNamer) {
 
         return new ConvertTask<>(
                 ConvertTask::getOutputFiles,
@@ -99,7 +99,7 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
     private final Path                   outputFile;
     private final Map<MediaStream, Path> outputFiles;
 
-    private ConvertTask(Function<ConvertTask<?>, T> resolver, MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir, String filename) {
+    private ConvertTask(Function<ConvertTask<?>, T> resolver, MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, Path outputDir, String filename) {
 
         super(Binary.ffmpeg());
         this.resolver     = resolver;
@@ -110,11 +110,11 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
         this.streamMapper = streamMapper;
         this.outputDir    = outputDir;
         this.filename     = filename;
-        this.outputFile   = null;
+        this.outputFile   = outputDir.resolve(this.filename);
         this.outputFiles  = null;
     }
 
-    private ConvertTask(Function<ConvertTask<?>, T> resolver, MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, @Nullable Path outputDir, MediaStreamNamer streamNamer) {
+    private ConvertTask(Function<ConvertTask<?>, T> resolver, MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, Path outputDir, MediaStreamNamer streamNamer) {
 
         super(Binary.ffmpeg());
         this.resolver    = resolver;
