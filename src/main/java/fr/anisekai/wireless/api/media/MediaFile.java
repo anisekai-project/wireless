@@ -10,9 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -60,13 +58,15 @@ public final class MediaFile {
         return new MediaFile(file, streams);
     }
 
-    private final Path             path;
-    private final Set<MediaStream> streams;
+    private final Path              path;
+    private final List<MediaStream> streams;
 
-    private MediaFile(Path path, Set<MediaStream> streams) {
+    private MediaFile(Path path, Collection<MediaStream> streams) {
 
         this.path    = path.toAbsolutePath().normalize();
-        this.streams = Collections.unmodifiableSet(streams);
+        this.streams = streams.stream()
+                              .sorted(Comparator.comparingInt(MediaStream::getId))
+                              .toList();
     }
 
     /**
@@ -80,26 +80,26 @@ public final class MediaFile {
     }
 
     /**
-     * Retrieve all media streams detected in the file.
+     * Retrieve all {@link MediaStream} detected in the file.
      *
-     * @return An unmodifiable {@link Set} of {@link MediaStream} objects.
+     * @return An unmodifiable {@link List} of {@link MediaStream} objects.
      */
-    public Set<MediaStream> getStreams() {
+    public List<MediaStream> getStreams() {
 
         return this.streams;
     }
 
     /**
-     * Retrieve all media streams of the specified type (e.g., video, audio, subtitles).
+     * Retrieve all {@link MediaStream} of the specified type (e.g., video, audio, subtitles).
      *
      * @param type
      *         The {@link CodecType} to filter by.
      *
-     * @return A {@link Set} of streams matching the given type.
+     * @return An unmodifiable {@link List} of {@link MediaStream} matching the given type.
      */
-    public Set<MediaStream> getStreams(CodecType type) {
+    public List<MediaStream> getStreams(CodecType type) {
 
-        return this.streams.stream().filter(stream -> stream.getCodec().getType() == type).collect(Collectors.toSet());
+        return this.streams.stream().filter(stream -> stream.getCodec().getType() == type).toList();
     }
 
 }
