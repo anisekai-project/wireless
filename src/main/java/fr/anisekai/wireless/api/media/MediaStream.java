@@ -47,7 +47,7 @@ public class MediaStream {
         JSONObject tagsJson = json.getJSONObject("tags");
 
         for (String key : tagsJson.keySet()) {
-            this.metadata.put(key, tagsJson.getString(key));
+            this.metadata.put(key.toLowerCase(), tagsJson.getString(key));
         }
 
     }
