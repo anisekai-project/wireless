@@ -32,21 +32,6 @@ public interface TrackEntity<E extends EpisodeEntity<?>> extends Entity<Long> {
     void setEpisode(@NotNull E episode);
 
     /**
-     * Retrieve this {@link TrackEntity}'s original identifier as a {@link MediaStream} within a {@link MediaFile}.
-     *
-     * @return An id.
-     */
-    int getOriginalId();
-
-    /**
-     * Define this {@link TrackEntity}'s original identifier as a {@link MediaStream} within a {@link MediaFile}.
-     *
-     * @param id
-     *         An id.
-     */
-    void setOriginalId(int id);
-
-    /**
      * Retrieve this {@link TrackEntity}'s name. This will be the name used on the player UI, if applicable.
      *
      * @return A name.
