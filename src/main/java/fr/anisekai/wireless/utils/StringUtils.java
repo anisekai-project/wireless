@@ -95,7 +95,7 @@ public final class StringUtils {
         if (count == 0) {
             return String.format(none, count);
         } else if (count == 1) {
-            return String.format(one, one);
+            return String.format(one, count);
         } else {
             return String.format(multiple, count);
         }
