@@ -4,6 +4,7 @@ import fr.anisekai.wireless.remote.interfaces.TorrentEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * A composite key representing a specific file within a torrent, identified by its torrent ID and file index.
@@ -13,7 +14,7 @@ import java.io.Serializable;
  * @param index
  *         The file index within the torrent
  */
-public record TorrentKey(String torrent, int index) implements Serializable {
+public record TorrentKey(UUID torrent, int index) implements Serializable {
 
     /**
      * Creates a new {@link TorrentKey} instance from a {@link TorrentEntity} and a file index.

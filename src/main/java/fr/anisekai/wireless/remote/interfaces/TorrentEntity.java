@@ -6,10 +6,29 @@ import fr.anisekai.wireless.api.services.Transmission;
 import fr.anisekai.wireless.remote.enums.ExternalBindType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.UUID;
+
 /**
  * Interface representing the base structure for a torrent.
  */
-public interface TorrentEntity extends Entity<String> {
+public interface TorrentEntity extends Entity<UUID> {
+
+    /**
+     * Retrieve this {@link TorrentEntity}'s hash.
+     *
+     * @return A hash
+     */
+    @ExternallyBoundBy(ExternalBindType.TRANSMISSION)
+    String getHash();
+
+    /**
+     * Define this {@link TorrentEntity}'s hash.
+     *
+     * @param hash
+     *         A hash
+     */
+    @ExternallyBoundBy(ExternalBindType.TRANSMISSION)
+    void setHash(String hash);
 
     /**
      * Retrieve this {@link TorrentEntity}'s name.
