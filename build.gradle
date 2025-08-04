@@ -6,27 +6,46 @@ plugins {
     id 'maven-publish'
     id 'com.github.ben-manes.versions' version '0.52.0'
     id 'org.ajoberstar.reckon' version '0.19.2'
-    id 'io.sentry.jvm.gradle' version '5.7.0'
-}
-
-def generalCharset = StandardCharsets.UTF_8.name()
-
-static def isNonStable(String version) {
-    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
-    def regex = /^[0-9,.v-]+(-r)?$/
-    return !stableKeyword && !(version ==~ regex)
+    id 'io.sentry.jvm.gradle' version '5.8.0'
 }
 
 group = 'fr.anisekai'
 
-compileJava.options.encoding = generalCharset
-compileTestJava.options.encoding = generalCharset
-javadoc.options.encoding = generalCharset
+def generalCharset = StandardCharsets.UTF_8.name()
+
+// Toolchain (Gradle 9+, JDK 24)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
+    withJavadocJar()
+    withSourcesJar()
+}
+
+// Encoding (must be applied on compile tasks, not java extension)
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = generalCharset
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+}
+
+tasks.withType(Javadoc).configureEach {
+    options.encoding = generalCharset
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
 
 reckon {
     defaultInferredScope = 'patch'
     snapshots()
-
     scopeCalc = calcScopeFromProp() | calcScopeFromCommitMessages()
     stageCalc = calcStageFromProp()
 }
@@ -37,20 +56,20 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
 
-    implementation group: 'fr.alexpado', name: 'simple-http-client', version: '1.1.2'
-    implementation group: 'org.json', name: 'json', version: '20250517'
-    implementation group: 'org.jetbrains', name: 'annotations', version: '26.0.2'
-
-    implementation group: 'net.dv8tion', name: 'JDA', version: '5.6.1'
-
-    implementation group: 'rome', name: 'rome', version: '1.0'
+    implementation 'fr.alexpado:simple-http-client:1.1.2'
+    implementation 'org.json:json:20250517'
+    implementation 'org.jetbrains:annotations:26.0.2'
+    implementation 'net.dv8tion:JDA:5.6.1'
+    implementation 'com.rometools:rome:2.1.0'
 }
 
-test {
-    useJUnitPlatform()
+def isNonStable = { String version ->
+    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { version.toUpperCase().contains(it) }
+    def regex = /^[0-9,.v-]+(-r)?$/
+    return !stableKeyword && !(version ==~ regex)
 }
 
 dependencyUpdates {
@@ -68,14 +87,12 @@ publishing {
         }
     }
     publications {
-        maven(MavenPublication) {
+        create("maven", MavenPublication) {
             artifactId = rootProject.name
-            from components.java
 
             pom {
                 name = project.name
                 description = 'Anisekai Wireless - Shared Lib for The Anisekai Project'
-
                 url = 'https://github.com/anisekai-project/anisekai-wireless'
 
                 licenses {
@@ -91,7 +108,6 @@ publishing {
                         email = 'contact@alexpado.fr'
                     }
                 }
-
                 scm {
                     connection = 'scm:git:github.com/anisekai-project/anisekai-wireless.git'
                     developerConnection = 'scm:git:ssh://github.com/anisekai-project/anisekai-wireless.git'
@@ -102,47 +118,28 @@ publishing {
     }
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-
-    withJavadocJar()
-    withSourcesJar()
-}
-
 signing {
     sign publishing.publications.maven
 }
 
-javadoc {
-    if (JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
-    }
-}
-
+// Required by Sentry Gradle plugin — assume these tasks are defined elsewhere
 tasks.named('sourcesJar') {
     dependsOn tasks.named('generateSentryDebugMetaPropertiesjava')
     dependsOn tasks.named('collectExternalDependenciesForSentry')
 }
 
 tasks.register('zipSnapshot', Zip) {
-    var version = project.version.toString()
     group = 'distribution'
     description = 'Zips the snapshot artifacts for Maven Central.'
-    from "$buildDir/dist/snapshots"
-    archiveFileName = "snapshot-${version}.zip"
-    destinationDirectory = file("$buildDir/zips")
+    from layout.buildDirectory.dir('dist/snapshots')
+    archiveFileName = "snapshot-${project.version}.zip"
+    destinationDirectory = layout.buildDirectory.dir('zips')
 }
 
 tasks.register('zipRelease', Zip) {
-    var version = project.version.toString()
     group = 'distribution'
     description = 'Zips the release artifacts for Maven Central.'
-    from "$buildDir/dist/releases"
-    archiveFileName = "release-${version}.zip"
-    destinationDirectory = file("$buildDir/zips")
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.compilerArgs += ['-Xlint:deprecation']
+    from layout.buildDirectory.dir('dist/releases')
+    archiveFileName = "release-${project.version}.zip"
+    destinationDirectory = layout.buildDirectory.dir('zips')
 }

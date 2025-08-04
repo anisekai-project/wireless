@@ -1,14 +1,19 @@
 package fr.anisekai.wireless.api.services;
 
-import com.sun.syndication.feed.synd.SyndEntry;
-import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.io.FeedException;
-import com.sun.syndication.io.SyndFeedInput;
-import com.sun.syndication.io.XmlReader;
-import org.jdom.Element;
+import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.rome.feed.synd.SyndFeed;
+import com.rometools.rome.io.FeedException;
+import com.rometools.rome.io.SyndFeedInput;
+import com.rometools.rome.io.XmlReader;
+import org.jdom2.Element;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,16 +52,27 @@ public final class Nyaa {
      *         If an I/O error occurs during retrieval.
      * @throws FeedException
      *         If the feed is malformed or cannot be parsed.
+     * @throws InterruptedException
+     *         If the operation is interrupted
      */
-    public static List<Entry> fetch(URI uri) throws IOException, FeedException {
+    public static List<Entry> fetch(URI uri) throws IOException, InterruptedException, FeedException {
 
-        SyndFeedInput       input   = new SyndFeedInput();
-        SyndFeed            feed    = input.build(new XmlReader(uri.toURL()));
-        Iterable<SyndEntry> entries = (List<SyndEntry>) feed.getEntries();
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpRequest               request  = HttpRequest.newBuilder(uri).build();
+            HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+            SyndFeedInput input = new SyndFeedInput();
+            SyndFeed      feed  = input.build(new XmlReader(response.body()));
+
+            return toNyaaEntries(feed);
+        }
+    }
+
+    private static @NotNull List<Entry> toNyaaEntries(SyndFeed feed) {
 
         List<Entry> items = new ArrayList<>();
 
-        for (SyndEntry entry : entries) {
+        for (SyndEntry entry : feed.getEntries()) {
 
             String title   = entry.getTitle();
             String link    = entry.getUri();
@@ -71,7 +87,6 @@ public final class Nyaa {
 
             items.add(new Entry(title, link, torrent, hash));
         }
-
         return items;
     }
 
