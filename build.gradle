@@ -64,6 +64,8 @@ dependencies {
     implementation 'org.jetbrains:annotations:26.0.2'
     implementation 'net.dv8tion:JDA:5.6.1'
     implementation 'com.rometools:rome:2.1.0'
+
+    compileOnly 'org.hibernate.orm:hibernate-core:6.6.22.Final'
 }
 
 def isNonStable = { String version ->
@@ -95,6 +97,18 @@ publishing {
                 name = project.name
                 description = 'Anisekai Wireless - Shared Lib for The Anisekai Project'
                 url = 'https://github.com/anisekai-project/anisekai-wireless'
+
+                withXml {
+                    def compileOnlyDeps = configurations.compileOnly.allDependencies.collect { dep ->
+                        [group: dep.group, name: dep.name]
+                    }
+
+                    asNode().dependencies.dependency.removeIf { depNode ->
+                        def group = depNode.groupId?.text()
+                        def name = depNode.artifactId?.text()
+                        compileOnlyDeps.any { it.group == group && it.name == name }
+                    }
+                }
 
                 licenses {
                     license {

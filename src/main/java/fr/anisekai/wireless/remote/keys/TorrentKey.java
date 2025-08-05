@@ -1,9 +1,11 @@
 package fr.anisekai.wireless.remote.keys;
 
 import fr.anisekai.wireless.remote.interfaces.TorrentEntity;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
+import java.sql.Types;
 import java.util.UUID;
 
 /**
@@ -14,7 +16,7 @@ import java.util.UUID;
  * @param index
  *         The file index within the torrent
  */
-public record TorrentKey(UUID torrent, int index) implements Serializable {
+public record TorrentKey(@JdbcTypeCode(Types.BINARY) UUID torrent, int index) implements Serializable {
 
     /**
      * Creates a new {@link TorrentKey} instance from a {@link TorrentEntity} and a file index.
