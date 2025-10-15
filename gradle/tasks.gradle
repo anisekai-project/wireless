@@ -1,0 +1,29 @@
+def distributions = ['snapshot', 'release']
+
+distributions.each { distribution ->
+    tasks.register("zip${distribution.capitalize()}", Zip) {
+        group = "distribution"
+        description = "Zips the ${distribution} artifacts for Maven Central."
+        from layout.buildDirectory.dir("dist/${distribution}s")
+        archiveFileName = "${distribution}-${project.version}.zip"
+        destinationDirectory = layout.buildDirectory.dir('zips')
+    }
+
+    tasks.register("prepare${distribution.capitalize()}") {
+        group = 'distribution'
+        description = "Cleans, publishes, and zips the final ${distribution} artifacts."
+
+        dependsOn tasks.named('clean'), tasks.named('publish'), tasks.named("zip${distribution.capitalize()}")
+    }
+
+}
+
+tasks.named('publish').configure {
+    mustRunAfter tasks.named('clean')
+}
+
+distributions.each { distribution ->
+    tasks.named("zip${distribution.capitalize()}").configure {
+        mustRunAfter tasks.named('publish')
+    }
+}

@@ -1,46 +1,20 @@
-import java.nio.charset.StandardCharsets
-
 plugins {
     id 'java-library'
     id 'signing'
     id 'maven-publish'
-    id 'com.github.ben-manes.versions' version '0.52.0'
-    id 'org.ajoberstar.reckon' version '0.19.2'
-    id 'io.sentry.jvm.gradle' version '5.8.0'
+    alias(libs.plugins.catalogUpdater)
+    alias(libs.plugins.reckon)
+    alias(libs.plugins.sentry)
 }
 
 group = 'fr.anisekai'
 
-def generalCharset = StandardCharsets.UTF_8.name()
+apply from: 'gradle/java.gradle'
+apply from: 'gradle/tasks.gradle'
+apply from: 'gradle/reckon.gradle'
 
-// Toolchain (Gradle 9+, JDK 24)
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(24)
-    }
-    withJavadocJar()
-    withSourcesJar()
-}
-
-// Encoding (must be applied on compile tasks, not java extension)
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = generalCharset
-    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
-}
-
-tasks.withType(Javadoc).configureEach {
-    options.encoding = generalCharset
-    if (JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
-    }
-}
-
-test {
-    useJUnitPlatform()
-}
-
-tasks.withType(Test).configureEach {
-    useJUnitPlatform()
+project.afterEvaluate {
+    apply from: 'gradle/publication.gradle'
 }
 
 reckon {
@@ -56,105 +30,24 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platformLauncher
 
-    implementation 'fr.alexpado:simple-http-client:1.1.2'
-    implementation 'org.json:json:20250517'
-    implementation 'org.jetbrains:annotations:26.0.2'
-    implementation 'net.dv8tion:JDA:5.6.1'
-    implementation 'com.rometools:rome:2.1.0'
+    implementation(libs.alexpado.simpleHttpClient)
+    implementation(libs.json.json)
+    implementation(libs.rometools.rome)
 
-    compileOnly 'org.hibernate.orm:hibernate-core:6.6.22.Final'
+    implementation(libs.jetbrains.annotations)
+    implementation(libs.orm.hibernate)
 }
 
-def isNonStable = { String version ->
-    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { version.toUpperCase().contains(it) }
-    def regex = /^[0-9,.v-]+(-r)?$/
-    return !stableKeyword && !(version ==~ regex)
-}
-
-dependencyUpdates {
-    rejectVersionIf {
-        isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)
-    }
-}
-
-publishing {
-    repositories {
-        maven {
-            def releasesRepoUrl = layout.buildDirectory.dir('dist/releases')
-            def snapshotsRepoUrl = layout.buildDirectory.dir('dist/snapshots')
-            url = version.toString().endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-        }
-    }
-    publications {
-        create("maven", MavenPublication) {
-            artifactId = rootProject.name
-            from components.java
-
-            pom {
-                name = project.name
-                description = 'Anisekai Wireless - Shared Lib for The Anisekai Project'
-                url = 'https://github.com/anisekai-project/anisekai-wireless'
-
-                withXml {
-                    def compileOnlyDeps = configurations.compileOnly.allDependencies.collect { dep ->
-                        [group: dep.group, name: dep.name]
-                    }
-
-                    asNode().dependencies.dependency.removeIf { depNode ->
-                        def group = depNode.groupId?.text()
-                        def name = depNode.artifactId?.text()
-                        compileOnlyDeps.any { it.group == group && it.name == name }
-                    }
-                }
-
-                licenses {
-                    license {
-                        name = 'Apache License, Version 2.0'
-                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-                developers {
-                    developer {
-                        id = 'alexpado'
-                        name = 'Alexandre PADOVAN'
-                        email = 'contact@alexpado.fr'
-                    }
-                }
-                scm {
-                    connection = 'scm:git:github.com/anisekai-project/anisekai-wireless.git'
-                    developerConnection = 'scm:git:ssh://github.com/anisekai-project/anisekai-wireless.git'
-                    url = 'https://github.com/anisekai-project/anisekai-wireless/tree/main'
-                }
-            }
-        }
-    }
-}
-
-signing {
-    sign publishing.publications.maven
+test {
+    useJUnitPlatform()
 }
 
 // Required by Sentry Gradle plugin — assume these tasks are defined elsewhere
 tasks.named('sourcesJar') {
     dependsOn tasks.named('generateSentryDebugMetaPropertiesjava')
     dependsOn tasks.named('collectExternalDependenciesForSentry')
-}
-
-tasks.register('zipSnapshot', Zip) {
-    group = 'distribution'
-    description = 'Zips the snapshot artifacts for Maven Central.'
-    from layout.buildDirectory.dir('dist/snapshots')
-    archiveFileName = "snapshot-${project.version}.zip"
-    destinationDirectory = layout.buildDirectory.dir('zips')
-}
-
-tasks.register('zipRelease', Zip) {
-    group = 'distribution'
-    description = 'Zips the release artifacts for Maven Central.'
-    from layout.buildDirectory.dir('dist/releases')
-    archiveFileName = "release-${project.version}.zip"
-    destinationDirectory = layout.buildDirectory.dir('zips')
 }

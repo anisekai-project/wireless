@@ -1,0 +1,25 @@
+[versions]
+catalogUpdater = "1.0.1"
+hibernate = "6.6.22.Final"
+httpClient = "1.1.2"
+jetbrainsAnnotations = "26.0.2-1"
+json = "20250517"
+junitBom = "6.0.0"
+reckon = "1.0.1"
+rome = "2.1.0"
+sentry = "5.8.0"
+
+[libraries]
+alexpado-simpleHttpClient = { module = "fr.alexpado:simple-http-client", version.ref = "httpClient" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrainsAnnotations" }
+json-json = { module = "org.json:json", version.ref = "json" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junitBom" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platformLauncher = { module = "org.junit.platform:junit-platform-launcher" }
+orm-hibernate = { module = "org.hibernate.orm:hibernate-core", version.ref = "hibernate" }
+rometools-rome = { module = "com.rometools:rome", version.ref = "rome" }
+
+[plugins]
+catalogUpdater = { id = "nl.littlerobots.version-catalog-update", version.ref = "catalogUpdater" }
+reckon = { id = "org.ajoberstar.reckon", version.ref = "reckon" }
+sentry = { id = "io.sentry.jvm.gradle", version.ref = "sentry" }
