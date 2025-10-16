@@ -1,13 +1,13 @@
 [versions]
 catalogUpdater = "1.0.1"
-hibernate = "6.6.22.Final"
+hibernate = "7.1.4.Final"
 httpClient = "1.1.2"
 jetbrainsAnnotations = "26.0.2-1"
 json = "20250517"
 junitBom = "6.0.0"
 reckon = "1.0.1"
 rome = "2.1.0"
-sentry = "5.8.0"
+sentry = "5.12.1"
 
 [libraries]
 alexpado-simpleHttpClient = { module = "fr.alexpado:simple-http-client", version.ref = "httpClient" }
