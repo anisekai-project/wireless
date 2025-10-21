@@ -1,3 +1,10 @@
+reckon {
+    defaultInferredScope = 'patch'
+    snapshots()
+    scopeCalc = calcScopeFromProp() | calcScopeFromCommitMessages()
+    stageCalc = calcStageFromProp()
+}
+
 def scopes = ['major', 'minor', 'patch']
 def stages = [
         beta : 'beta',

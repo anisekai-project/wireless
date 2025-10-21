@@ -10,18 +10,10 @@ plugins {
 group = 'fr.anisekai'
 
 apply from: 'gradle/java.gradle'
-apply from: 'gradle/tasks.gradle'
 apply from: 'gradle/reckon.gradle'
 
 project.afterEvaluate {
     apply from: 'gradle/publication.gradle'
-}
-
-reckon {
-    defaultInferredScope = 'patch'
-    snapshots()
-    scopeCalc = calcScopeFromProp() | calcScopeFromCommitMessages()
-    stageCalc = calcStageFromProp()
 }
 
 repositories {
