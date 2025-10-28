@@ -10,6 +10,7 @@ publishing {
     publications {
         create("maven", MavenPublication) {
             artifactId = rootProject.name
+            version = version.toString()
             from components.java
 
             pom {
