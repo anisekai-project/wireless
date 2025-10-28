@@ -1,5 +1,6 @@
 publishing {
     repositories {
+        mavenLocal()
         maven {
             def releasesRepoUrl = layout.buildDirectory.dir('dist/releases')
             def snapshotsRepoUrl = layout.buildDirectory.dir('dist/snapshots')
