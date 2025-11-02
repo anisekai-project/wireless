@@ -1,7 +1,7 @@
 package fr.anisekai.wireless.remote.interfaces;
 
 import fr.anisekai.wireless.annotations.ExternallyBoundBy;
-import fr.anisekai.wireless.api.persistence.interfaces.Entity;
+import fr.anisekai.wireless.interfaces.Entity;
 import fr.anisekai.wireless.remote.enums.ExternalBindType;
 import fr.anisekai.wireless.remote.keys.TorrentKey;
 import org.jetbrains.annotations.NotNull;

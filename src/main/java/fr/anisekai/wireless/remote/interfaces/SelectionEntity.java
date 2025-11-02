@@ -1,6 +1,6 @@
 package fr.anisekai.wireless.remote.interfaces;
 
-import fr.anisekai.wireless.api.persistence.interfaces.Entity;
+import fr.anisekai.wireless.interfaces.Entity;
 import fr.anisekai.wireless.remote.enums.AnimeSeason;
 import fr.anisekai.wireless.remote.enums.SelectionStatus;
 import org.jetbrains.annotations.NotNull;

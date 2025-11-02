@@ -1,10 +1,8 @@
 package fr.anisekai.wireless.remote.interfaces;
 
-import fr.anisekai.wireless.api.media.MediaFile;
-import fr.anisekai.wireless.api.media.MediaStream;
 import fr.anisekai.wireless.api.media.enums.Codec;
 import fr.anisekai.wireless.api.media.enums.CodecType;
-import fr.anisekai.wireless.api.persistence.interfaces.Entity;
+import fr.anisekai.wireless.interfaces.Entity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

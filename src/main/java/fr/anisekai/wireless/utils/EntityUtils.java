@@ -1,6 +1,6 @@
 package fr.anisekai.wireless.utils;
 
-import fr.anisekai.wireless.api.persistence.interfaces.Entity;
+import fr.anisekai.wireless.interfaces.Entity;
 
 import java.io.Serializable;
 import java.util.Comparator;

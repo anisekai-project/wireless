@@ -1,6 +1,6 @@
 package fr.anisekai.wireless.remote.interfaces;
 
-import fr.anisekai.wireless.api.persistence.interfaces.Entity;
+import fr.anisekai.wireless.interfaces.Entity;
 import fr.anisekai.wireless.remote.keys.InterestKey;
 import org.jetbrains.annotations.NotNull;
 

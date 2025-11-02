@@ -1,17 +1,18 @@
 package fr.anisekai.wireless.remote.interfaces;
 
 import fr.anisekai.wireless.api.json.AnisekaiJson;
-import fr.anisekai.wireless.api.persistence.interfaces.Entity;
+import fr.anisekai.wireless.interfaces.Entity;
 import fr.anisekai.wireless.remote.enums.TaskStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 /**
  * Interface representing the base structure for a task.
  */
-public interface TaskEntity extends Entity<Long> {
+public interface TaskEntity extends Entity<UUID> {
 
     /**
      * Retrieve this {@link TaskEntity}'s factory name.
@@ -42,6 +43,21 @@ public interface TaskEntity extends Entity<Long> {
      *         A name.
      */
     void setName(@NotNull String name);
+
+    /**
+     * Retrieve this {@link TaskEntity}'s isolation uuid.
+     *
+     * @return An isolation {@link UUID}
+     */
+    @Nullable UUID getIsolationUuid();
+
+    /**
+     * Define this {@link TaskEntity}'s isolation uuid.
+     *
+     * @param uuid
+     *         An isolation {@link UUID}
+     */
+    void setIsolationUuid(@Nullable UUID uuid);
 
     /**
      * Retrieve this {@link TaskEntity}'s {@link TaskStatus}.

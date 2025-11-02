@@ -1,7 +1,7 @@
 package fr.anisekai.wireless.remote.interfaces;
 
 import fr.anisekai.wireless.annotations.ExternallyBoundBy;
-import fr.anisekai.wireless.api.persistence.interfaces.Entity;
+import fr.anisekai.wireless.interfaces.Entity;
 import fr.anisekai.wireless.api.services.Transmission;
 import fr.anisekai.wireless.remote.enums.ExternalBindType;
 import org.jetbrains.annotations.NotNull;

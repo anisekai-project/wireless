@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.alexpado.simpleHttpClient)
     implementation(libs.json.json)
     implementation(libs.rometools.rome)
+    implementation(libs.proxy.bytebuddy)
 
     implementation(libs.jetbrains.annotations)
     implementation(libs.orm.hibernate)

@@ -1,4 +1,4 @@
-package fr.anisekai.wireless.api.persistence.interfaces;
+package fr.anisekai.wireless.interfaces;
 
 import java.io.Serializable;
 import java.time.ZonedDateTime;

@@ -1,8 +1,7 @@
 package fr.anisekai.wireless.remote.interfaces;
 
-import fr.anisekai.wireless.api.persistence.interfaces.Entity;
+import fr.anisekai.wireless.interfaces.Entity;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Interface representing the base structure for an episode.
