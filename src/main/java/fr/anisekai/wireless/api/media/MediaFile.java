@@ -12,7 +12,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Represents a multimedia file composed of various media streams such as audio, video, or subtitles.

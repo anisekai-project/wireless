@@ -8,7 +8,6 @@ import fr.anisekai.wireless.api.media.bin.wrapper.FFMpegCommandTask;
 import fr.anisekai.wireless.api.media.enums.Codec;
 import fr.anisekai.wireless.api.media.interfaces.MediaStreamMapper;
 import fr.anisekai.wireless.api.media.interfaces.MediaStreamNamer;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;

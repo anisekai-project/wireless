@@ -3,7 +3,6 @@ package fr.anisekai.wireless.api.json.validation;
 import fr.anisekai.wireless.api.json.AnisekaiArray;
 import fr.anisekai.wireless.api.json.AnisekaiJson;
 import fr.anisekai.wireless.api.json.exceptions.JSONValidationException;
-import org.json.JSONException;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
