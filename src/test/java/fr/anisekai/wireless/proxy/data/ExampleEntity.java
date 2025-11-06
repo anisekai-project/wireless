@@ -8,8 +8,13 @@ public class ExampleEntity implements IExampleEntity {
 
     public static ExampleEntity create() {
 
+        return create(1L);
+    }
+
+    public static ExampleEntity create(long id) {
+
         ExampleEntity entity = new ExampleEntity();
-        entity.setId(1L);
+        entity.setId(id);
         entity.setActive(true);
         entity.setTags(null);
         entity.setMapping(null);
@@ -17,7 +22,9 @@ public class ExampleEntity implements IExampleEntity {
         return entity;
     }
 
+
     private Long                id;
+    private String              name;
     private boolean             active;
     private List<String>        tags;
     private Map<String, String> mapping;
@@ -34,6 +41,18 @@ public class ExampleEntity implements IExampleEntity {
     public void setId(Long id) {
 
         this.id = id;
+    }
+
+    @Override
+    public String getName() {
+
+        return this.name;
+    }
+
+    @Override
+    public void setName(String name) {
+
+        this.name = name;
     }
 
     @Override
@@ -87,7 +106,7 @@ public class ExampleEntity implements IExampleEntity {
     @Override
     public boolean isNew() {
 
-        return this.id != null;
+        return this.id == null;
     }
 
     public boolean isIgnored() {
@@ -113,6 +132,20 @@ public class ExampleEntity implements IExampleEntity {
     public void setEntity(ExampleEntity entity) {
 
         this.entity = entity;
+    }
+
+    @Override
+    public String toString() {
+
+        return "ExampleEntity{id=%d, name='%s', active=%s, tags=%s, mapping=%s, ignoreThis=%s, entity=%s}".formatted(
+                this.id,
+                this.name,
+                this.active,
+                this.tags,
+                this.mapping,
+                this.ignoreThis,
+                this.entity
+        );
     }
 
 }

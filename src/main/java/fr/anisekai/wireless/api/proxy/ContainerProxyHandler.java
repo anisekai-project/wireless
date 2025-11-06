@@ -3,30 +3,79 @@ package fr.anisekai.wireless.api.proxy;
 import fr.anisekai.wireless.api.proxy.interfaces.Dirtyable;
 import fr.anisekai.wireless.api.proxy.interfaces.ProxyPolicy;
 import fr.anisekai.wireless.api.proxy.interfaces.State;
+import fr.anisekai.wireless.api.reflection.Property;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
 
+/**
+ * An {@link InvocationHandler} for proxying container objects like {@link Collection} and {@link Map}.
+ * <p>
+ * This handler intercepts method calls to a container to provide two main features:
+ * <ol>
+ *     <li><b>Change Tracking:</b> It marks the container as "dirty" if a method that modifies
+ *     its structure is called (e.g., {@code add}, {@code remove}, {@code clear}).</li>
+ *     <li><b>Deep Proxying:</b> It recursively proxies the elements within the container
+ *     according to the provided {@link ProxyPolicy}. This allows for tracking changes not only
+ *     to the container itself but also within the objects it contains.</li>
+ * </ol>
+ * It also handles the necessary wrapping and unwrapping of proxies when elements are added to,
+ * retrieved from, or passed as arguments to the container's methods.
+ */
 public class ContainerProxyHandler implements InvocationHandler, Dirtyable {
 
+    /**
+     * A set of method names that are known to mutate the state of a {@link Collection} or {@link Map}. When a method
+     * with one of these names is invoked, the container is marked as dirty.
+     */
     private static final Collection<String> MUTATOR_METHODS = new HashSet<>(Arrays.asList(
             "add", "remove", "put", "clear", "addAll", "removeAll", "putAll", "retainAll",
             "removeIf", "replaceAll", "compute", "computeIfAbsent", "computeIfPresent", "merge", "set"
     ));
 
-    private final Property               property;
-    private final Object                 originalContainer;
-    private final ProxyPolicy            policy;
-    private final Map<Object, State<?>>  proxyContext;
+    private final ClassProxyFactory factory;
+
+
+    private final Property    property;
+    private final Object      originalContainer;
+    private final ProxyPolicy policy;
+
+    /**
+     * The shared context for the entire graph of proxies, used to avoid circular dependencies and to reuse existing
+     * proxies for the same underlying object instance.
+     */
+    private final Map<Object, State<?>> proxyContext;
+
+    /**
+     * A map that stores the state handlers for the elements of this container that are proxied. It maps the original
+     * element instance to its {@link Dirtyable} state handler. Using {@link IdentityHashMap} is crucial to ensure
+     * elements are keyed by their reference, not by {@code equals()}.
+     */
     private final Map<Object, Dirtyable> elementProxies = new IdentityHashMap<>();
 
     private boolean isDirty = false;
 
+    /**
+     * Constructs a new proxy handler for a container object.
+     * <p>
+     * Upon construction, it immediately iterates through the container's initial elements and creates proxies for them
+     * if the {@link ProxyPolicy} requires it.
+     *
+     * @param property
+     *         The property representing this container in its parent object.
+     * @param originalContainer
+     *         The actual container instance to be proxied.
+     * @param policy
+     *         The policy for creating nested proxies.
+     * @param proxyContext
+     *         The shared proxy context for the object graph.
+     */
     @SuppressWarnings("ChainOfInstanceofChecks")
-    public ContainerProxyHandler(Property property, Object originalContainer, ProxyPolicy policy, Map<Object, State<?>> proxyContext) {
+    ContainerProxyHandler(ClassProxyFactory factory, Property property, Object originalContainer, ProxyPolicy policy, Map<Object, State<?>> proxyContext) {
 
+        this.factory  = factory;
         this.property = property;
 
         this.originalContainer = originalContainer;
@@ -40,6 +89,30 @@ public class ContainerProxyHandler implements InvocationHandler, Dirtyable {
         }
     }
 
+    /**
+     * Intercepts all method calls made on the proxied container.
+     * <p>
+     * This method is the central hub of the proxy's logic. It:
+     * <ul>
+     *   <li>Handles calls to {@link Dirtyable} and standard {@code Object} methods.</li>
+     *   <li>Detects calls to mutator methods (e.g., {@code add}, {@code remove}) and marks the container as dirty.</li>
+     *   <li>Proxies new elements that are being added to the container.</li>
+     *   <li>Unwraps any proxy arguments before passing them to the original container.</li>
+     *   <li>Wraps return values (like elements from a {@code get} call or an {@code Iterator}) in proxies if necessary.</li>
+     * </ul>
+     *
+     * @param proxy
+     *         The proxy instance that the method was invoked on.
+     * @param method
+     *         The {@code Method} instance corresponding to the interface method invoked on the proxy instance.
+     * @param args
+     *         An array of objects containing the values of the arguments passed in the method invocation.
+     *
+     * @return The value to return from the method invocation on the proxy instance.
+     *
+     * @throws Throwable
+     *         The exception to throw from the method invocation on the proxy instance.
+     */
     @Override
     @SuppressWarnings("ChainOfInstanceofChecks")
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -120,7 +193,7 @@ public class ContainerProxyHandler implements InvocationHandler, Dirtyable {
         if (this.policy.shouldProxy(this.property, element) && !this.elementProxies.containsKey(element)) {
             State<?> elementState = this.proxyContext.get(element);
             if (elementState == null) {
-                elementState = ClassProxyFactory.create(element, this.policy);
+                elementState = this.factory.create(element);
             }
             this.elementProxies.put(element, elementState);
         }
@@ -134,7 +207,6 @@ public class ContainerProxyHandler implements InvocationHandler, Dirtyable {
         }
         return this.elementProxies.values().stream().anyMatch(Dirtyable::isDirty);
     }
-
 
     private Iterator<?> proxyIterator(Iterator<?> original) {
 
@@ -152,55 +224,6 @@ public class ContainerProxyHandler implements InvocationHandler, Dirtyable {
 
                 ContainerProxyHandler.this.isDirty = true;
                 original.remove();
-            }
-        };
-    }
-
-    @SuppressWarnings("unchecked")
-    private <K> ListIterator<K> proxyListIterator(ListIterator<K> original) {
-
-        return new ListIterator<K>() {
-            public boolean hasNext() {return original.hasNext();}
-
-
-            public K next() {
-
-                K element = (K) original.next();
-                return ContainerProxyHandler.this.elementProxies.containsKey(element) ?
-                        ((State<K>) ContainerProxyHandler.this.elementProxies.get(element)).getProxy() :
-                        element;
-            }
-
-            public boolean hasPrevious() {return original.hasPrevious();}
-
-            public K previous() {
-
-                K element = (K) original.previous();
-                return ContainerProxyHandler.this.elementProxies.containsKey(element) ?
-                        ((State<K>) ContainerProxyHandler.this.elementProxies.get(element)).getProxy() :
-                        element;
-            }
-
-            public int nextIndex() {return original.nextIndex();}
-
-            public int previousIndex() {return original.previousIndex();}
-
-            public void remove() {
-
-                ContainerProxyHandler.this.isDirty = true;
-                original.remove();
-            }
-
-            public void set(K e) {
-
-                ContainerProxyHandler.this.isDirty = true;
-                original.set(e);
-            }
-
-            public void add(K e) {
-
-                ContainerProxyHandler.this.isDirty = true;
-                original.add(e);
             }
         };
     }

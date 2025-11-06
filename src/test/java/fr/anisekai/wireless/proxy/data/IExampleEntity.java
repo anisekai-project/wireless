@@ -7,6 +7,10 @@ import java.util.Map;
 
 public interface IExampleEntity extends Entity<Long> {
 
+    String getName();
+
+    void setName(String name);
+
     boolean isActive();
 
     void setActive(boolean active);

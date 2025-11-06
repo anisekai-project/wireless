@@ -2,82 +2,130 @@ package fr.anisekai.wireless.api.proxy;
 
 import fr.anisekai.wireless.api.proxy.exceptions.ProxyCreationException;
 import fr.anisekai.wireless.api.proxy.interfaces.Dirtyable;
+import fr.anisekai.wireless.api.proxy.interfaces.ProxyInterceptor;
 import fr.anisekai.wireless.api.proxy.interfaces.ProxyPolicy;
 import fr.anisekai.wireless.api.proxy.interfaces.State;
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.implementation.MethodDelegation;
-import net.bytebuddy.implementation.bind.annotation.AllArguments;
-import net.bytebuddy.implementation.bind.annotation.Origin;
-import net.bytebuddy.implementation.bind.annotation.RuntimeType;
-import net.bytebuddy.matcher.ElementMatchers;
+import fr.anisekai.wireless.api.reflection.LinkedProperty;
+import fr.anisekai.wireless.api.reflection.Properties;
+import fr.anisekai.wireless.api.reflection.Property;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
-public class ClassProxyImpl<S> implements State<S> {
+/**
+ * A proxy that tracks changes to a JavaBean-like object.
+ * <p>
+ * This class creates a proxy around an instance of a class {@code S} to intercept property access (getters and
+ * setters). It maintains the original state of the object and tracks any modifications made through the proxy. This
+ * allows for checking if the object is "dirty" (i.e., has changed) and for reverting all changes back to the original
+ * state or simply act upon specific changes.
+ * <p>
+ * The proxying is deep, meaning that if a property is an object that should also be proxied (according to the
+ * {@link ProxyPolicy}), a proxy will be created for it as well, allowing for nested change tracking.
+ * <p>
+ * This implementation uses ByteBuddy to create the proxy class at runtime.
+ *
+ * @param <S>
+ *         the type of the object being proxied.
+ *
+ * @see ProxyPolicy
+ */
+public class ClassProxyImpl<S> implements ProxyInterceptor<S> {
 
-    private static final Map<Class<?>, Set<Property>> PROPERTIES_CACHE = new ConcurrentHashMap<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClassProxyImpl.class);
 
-    private final S instance;
-    private final S proxy;
+    private final ClassProxyFactory factory;
+    private final S                 instance;
+    private final S                 proxy;
 
-    private final Map<Property, Object> originalState;
-    private final Map<Property, Object> differentialState;
-    private final Map<Method, Property> methodLookup;
+    private final Map<Property, Object>         originalState;
+    private final Map<Property, Object>         differentialState;
+    private final Map<Method, Property>         methodLookup;
+    private final Map<Object, State<?>>         proxyContext;
+    private final ProxyPolicy                   policy;
+    private final Consumer<ProxyInterceptor<S>> clear;
 
-    private final ProxyPolicy              policy;
-    private final Map<Object, State<?>>    proxyContext;
+    /**
+     * A map that holds the {@link Dirtyable} state handlers for sub-proxies. These are proxies for properties of the
+     * main proxied object. This allows for recursively checking the dirty state of the entire object graph.
+     */
     private final Map<Property, Dirtyable> subProxyStates;
-    private final Map<Property, Object>    subProxyCache;
 
-    public ClassProxyImpl(S instance, ProxyPolicy policy) throws ReflectiveOperationException {
+    /**
+     * A cache for the sub-proxy instances. This avoids creating new sub-proxy instances every time a getter is called
+     * for a property that should be proxied.
+     */
+    private final Map<Property, Object> subProxyCache;
 
-        this(instance, policy, new IdentityHashMap<>());
-    }
 
-    @SuppressWarnings("unchecked")
-    public ClassProxyImpl(S instance, ProxyPolicy policy, Map<Object, State<?>> proxyContext) throws ReflectiveOperationException {
+    /**
+     * Creates a new proxy for the given instance with a shared proxy context. This constructor is used for creating
+     * nested proxies to track changes in a graph of objects and to prevent circular dependencies.
+     *
+     * @param instance
+     *         the object instance to proxy.
+     * @param policy
+     *         the policy defining the proxying behavior.
+     * @param proxyContext
+     *         a map that serves as a context for a graph of proxies, mapping original instances to their proxy handlers
+     *         to avoid cycles.
+     *
+     * @throws ReflectiveOperationException
+     *         if there is an error during proxy creation.
+     * @throws IllegalStateException
+     *         if a circular dependency is detected.
+     */
+    ClassProxyImpl(ClassProxyFactory factory, S instance, S proxy, ProxyPolicy policy, Map<Object, State<?>> proxyContext, Consumer<ProxyInterceptor<S>> clear) throws ReflectiveOperationException {
 
         if (proxyContext.containsKey(instance)) {
-            throw new IllegalStateException("Circular dependency detected for instance of " + instance.getClass()
-                                                                                                      .getName());
+            throw new IllegalStateException(String.format(
+                    "Circular dependency detected for instance of %s",
+                    instance.getClass().getName()
+            ));
         }
 
+        this.factory        = factory;
         this.instance       = instance;
+        this.proxy          = proxy;
         this.policy         = policy;
         this.proxyContext   = proxyContext;
+        this.clear          = clear;
         this.subProxyStates = new HashMap<>();
-        this.subProxyCache  = new HashMap<>(); // <<< NEW: Initialize the cache
+        this.subProxyCache  = new HashMap<>();
 
-        Set<Property> properties = PROPERTIES_CACHE.computeIfAbsent(instance.getClass(), Property::computeProperties);
+        Set<LinkedProperty> properties = Properties.getPropertiesOf(instance);
         this.originalState     = new HashMap<>();
         this.differentialState = new HashMap<>();
         this.methodLookup      = new HashMap<>();
 
-        for (Property property : properties) {
-            this.originalState.put(property, property.getGetter().invoke(instance));
+        for (LinkedProperty property : properties) {
+            this.originalState.put(property, property.getValue());
             this.methodLookup.put(property.getGetter(), property);
             this.methodLookup.put(property.getSetter(), property);
         }
 
-        this.proxy = (S) new ByteBuddy()
-                .subclass(instance.getClass())
-                .implement(State.class)
-                .method(ElementMatchers.any())
-                .intercept(MethodDelegation.to(this))
-                .make()
-                .load(instance.getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
-                .getLoaded()
-                .getDeclaredConstructor()
-                .newInstance();
-
         this.proxyContext.put(this.instance, this);
     }
 
+    /**
+     * A specialized equality check that treats collections and maps as equal only if they are the same instance. For
+     * other types, it uses {@link Objects#equals(Object, Object)}.
+     * <p>
+     * This is to avoid costly equality checks on large collections and to ensure that if a collection is replaced with
+     * a different instance (even with the same contents), it is marked as a change.
+     *
+     * @param newValue
+     *         the new value of the property.
+     * @param originalValue
+     *         the original value of the property.
+     *
+     * @return {@code true} if the values are considered equal, {@code false} otherwise.
+     */
     private static boolean strictlyEquals(Object newValue, Object originalValue) {
 
         boolean isEquals;
@@ -89,8 +137,8 @@ public class ClassProxyImpl<S> implements State<S> {
         return isEquals;
     }
 
-    @RuntimeType
-    public Object intercept(@Origin Method method, @AllArguments Object[] args) throws Throwable {
+    @Override
+    public Object intercept(Method method, Object[] args) throws Exception {
 
         String methodName = method.getName();
         int    paramCount = method.getParameterCount();
@@ -98,6 +146,7 @@ public class ClassProxyImpl<S> implements State<S> {
         if (methodName.equals("hashCode") && paramCount == 0) {
             return System.identityHashCode(this.instance);
         }
+
         if (methodName.equals("equals") && paramCount == 1) {
             Object other = args[0];
 
@@ -106,7 +155,7 @@ public class ClassProxyImpl<S> implements State<S> {
                 otherInstance = ((State<?>) other).getInstance();
             }
 
-            return this.instance == otherInstance;
+            return this.instance.equals(otherInstance);
         }
         if (methodName.equals("toString") && paramCount == 0) {
             return this.instance.toString();
@@ -115,6 +164,8 @@ public class ClassProxyImpl<S> implements State<S> {
         if (method.getDeclaringClass().equals(State.class) || method.getDeclaringClass().equals(Dirtyable.class)) {
             return method.invoke(this, args);
         }
+
+        LOGGER.info("Intercepted {}", method.getName());
 
         Property property = this.methodLookup.get(method);
         if (property == null) {
@@ -143,30 +194,38 @@ public class ClassProxyImpl<S> implements State<S> {
         Object subProxyInstance = null;
 
         if (this.policy.shouldProxy(property, value)) {
+
             State<?> subProxyState = this.proxyContext.computeIfAbsent(
                     value,
-                    k -> ClassProxyFactory.create(value, this.policy)
+                    ignore -> this.factory.create(value)
             );
             this.subProxyStates.put(property, subProxyState);
             subProxyInstance = subProxyState.getProxy();
+
         } else if (this.policy.shouldProxyContainer(value)) {
+
             Class<?> getterReturnType = property.getGetter().getReturnType();
+
             if (!getterReturnType.isInterface()) {
-                throw new ProxyCreationException(
-                        "Cannot proxy container for property '" + property.getName() + "'. The getter's return type must be an interface (e.g., java.util.List).",
-                        null
-                );
+                throw new ProxyCreationException(String.format(
+                        "Cannot proxy container for property '%s'. The getter's return type must be an interface (e.g., java.util.List).",
+                        property.getName()
+                ));
             }
 
             Set<Class<?>> interfacesToProxy = new HashSet<>();
             interfacesToProxy.add(getterReturnType);
-            Collections.addAll(
-                    interfacesToProxy,
-                    value.getClass().getInterfaces()
-            );
+            Collections.addAll(interfacesToProxy, value.getClass().getInterfaces());
             interfacesToProxy.add(Dirtyable.class);
 
-            ContainerProxyHandler handler = new ContainerProxyHandler(property, value, this.policy, this.proxyContext);
+            ContainerProxyHandler handler = new ContainerProxyHandler(
+                    this.factory,
+                    property,
+                    value,
+                    this.policy,
+                    this.proxyContext
+            );
+
             this.subProxyStates.put(property, handler);
 
             subProxyInstance = Proxy.newProxyInstance(
@@ -231,7 +290,6 @@ public class ClassProxyImpl<S> implements State<S> {
         return Collections.unmodifiableMap(new HashMap<>(this.originalState));
     }
 
-
     @Override
     public Map<Property, Object> getDifferentialState() {
 
@@ -279,6 +337,12 @@ public class ClassProxyImpl<S> implements State<S> {
         this.differentialState.clear();
         this.subProxyCache.clear();
         this.subProxyStates.clear();
+    }
+
+    @Override
+    public void close() {
+
+        this.clear.accept(this);
     }
 
 }
