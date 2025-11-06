@@ -3,8 +3,8 @@ package fr.anisekai.wireless.remote.enums;
 import fr.anisekai.wireless.annotations.ExternallyBoundBy;
 
 /**
- * Used in conjonction of the {@link ExternallyBoundBy} annotation to provide a better insight of when the value associated to it
- * might change.
+ * Used in conjonction of the {@link ExternallyBoundBy} annotation to provide a better insight of when the value
+ * associated to it might change.
  */
 public enum ExternalBindType {
     /**

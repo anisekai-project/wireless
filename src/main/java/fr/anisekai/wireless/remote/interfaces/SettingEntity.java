@@ -9,16 +9,16 @@ import org.jetbrains.annotations.Nullable;
 public interface SettingEntity extends Entity<String> {
 
     /**
-     * Retrieve this {@link SettingEntity}'s value. Every setting is stored as a string, and it is the responsibility of the
-     * caller to check and convert the content.
+     * Retrieve this {@link SettingEntity}'s value. Every setting is stored as a string, and it is the responsibility of
+     * the caller to check and convert the content.
      *
      * @return A string value
      */
     @Nullable String getValue();
 
     /**
-     * Define this {@link SettingEntity}'s value. Every setting is stored as a string, and it is the responsibility of the caller
-     * to check and convert the content.
+     * Define this {@link SettingEntity}'s value. Every setting is stored as a string, and it is the responsibility of
+     * the caller to check and convert the content.
      *
      * @param value
      *         A string value

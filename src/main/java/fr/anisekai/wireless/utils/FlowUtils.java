@@ -13,8 +13,8 @@ public final class FlowUtils {
     private FlowUtils() {}
 
     /**
-     * Execute the provided {@code action} and returns its result. If any {@link Exception} occurs while executing it, it will be
-     * wrapped into a {@link RuntimeException} using the provided {@link Function}.
+     * Execute the provided {@code action} and returns its result. If any {@link Exception} occurs while executing it,
+     * it will be wrapped into a {@link RuntimeException} using the provided {@link Function}.
      *
      * @param action
      *         The action to execute
@@ -35,8 +35,8 @@ public final class FlowUtils {
     }
 
     /**
-     * Execute the provided {@code action}. If any {@link Exception} occurs while executing it, it will be wrapped into a
-     * {@link RuntimeException} using the provided {@link Function}.
+     * Execute the provided {@code action}. If any {@link Exception} occurs while executing it, it will be wrapped into
+     * a {@link RuntimeException} using the provided {@link Function}.
      *
      * @param action
      *         The action to execute

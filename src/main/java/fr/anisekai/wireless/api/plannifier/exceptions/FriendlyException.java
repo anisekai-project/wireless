@@ -8,7 +8,8 @@ package fr.anisekai.wireless.api.plannifier.exceptions;
 public interface FriendlyException {
 
     /**
-     * Retrieve the friendly message for the exception. The friendly message is just the message to display to the user.
+     * Retrieve the friendly message for the exception. The friendly message is just the message to display to the
+     * user.
      *
      * @return A friendly message.
      */

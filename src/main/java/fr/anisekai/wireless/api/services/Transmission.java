@@ -19,8 +19,8 @@ import java.util.*;
 public class Transmission {
 
     /**
-     * Default set of torrent fields requested when querying Transmission. These fields represent common torrent metadata such as
-     * ID, name, status, download directory, progress, and files.
+     * Default set of torrent fields requested when querying Transmission. These fields represent common torrent
+     * metadata such as ID, name, status, download directory, progress, and files.
      */
     public static final List<String> DEFAULT_TORRENT_FIELDS = Arrays.asList(
             "hashString",
@@ -129,14 +129,20 @@ public class Transmission {
      * @param files
      *         The {@link Torrent}'s file names.
      */
-    public record Torrent(String hash, TorrentStatus status, String downloadDir, double percentDone, List<String> files) {
+    public record Torrent(
+            String hash,
+            TorrentStatus status,
+            String downloadDir,
+            double percentDone,
+            List<String> files
+    ) {
 
         /**
          * Creates a {@link Torrent} instance from an {@link AnisekaiJson} object representing a Transmission torrent.
          *
          * @param json
-         *         The JSON object containing torrent information, expected to have keys: "hashString", "status", "downloadDir",
-         *         "percentDone", and "files.0.name".
+         *         The JSON object containing torrent information, expected to have keys: "hashString", "status",
+         *         "downloadDir", "percentDone", and "files.0.name".
          *
          * @return A new {@link Torrent} instance populated with data parsed from the given JSON.
          */

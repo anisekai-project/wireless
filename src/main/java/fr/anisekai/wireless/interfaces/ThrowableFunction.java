@@ -5,8 +5,8 @@ import java.util.function.Function;
 /**
  * A functional interface similar to {@link Function}, but designed to allow the throwing of checked exceptions.
  * <p>
- * This is useful when working with lambda expressions or method references that may throw checked exceptions, which are not
- * supported by standard functional interfaces.
+ * This is useful when working with lambda expressions or method references that may throw checked exceptions, which are
+ * not supported by standard functional interfaces.
  *
  * @param <I>
  *         The input type.

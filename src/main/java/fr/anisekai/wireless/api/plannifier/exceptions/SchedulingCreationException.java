@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Exception thrown when a scheduled event cannot be successfully persisted by the underlying service.
  * <p>
- * This exception typically indicates that the scheduler successfully created the event in memory, but the persistence layer
- * (e.g., database or external service) rejected or failed to save it.
+ * This exception typically indicates that the scheduler successfully created the event in memory, but the persistence
+ * layer (e.g., database or external service) rejected or failed to save it.
  */
 public class SchedulingCreationException extends RuntimeException implements FriendlyException {
 

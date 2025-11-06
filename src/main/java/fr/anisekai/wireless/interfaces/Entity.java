@@ -19,8 +19,8 @@ public interface Entity<PK extends Serializable> {
     PK getId();
 
     /**
-     * Define this {@link Entity} primary key. Unless specifically overridden, this method will always throw an exception as
-     * primary key as considered auto-incremented by default.
+     * Define this {@link Entity} primary key. Unless specifically overridden, this method will always throw an
+     * exception as primary key as considered auto-incremented by default.
      *
      * @param id
      *         The primary key.

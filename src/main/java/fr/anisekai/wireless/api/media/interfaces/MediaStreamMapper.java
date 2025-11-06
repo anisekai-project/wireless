@@ -9,15 +9,16 @@ import fr.anisekai.wireless.api.media.enums.Disposition;
 import java.util.function.BiPredicate;
 
 /**
- * Functional interface representing a mapping operation applied when a {@link MediaStream} is added to a {@link Binary}.
+ * Functional interface representing a mapping operation applied when a {@link MediaStream} is added to a
+ * {@link Binary}.
  * <p>
  * Implementations are typically used to inject additional arguments or metadata based on the stream and its codec.
  */
 public interface MediaStreamMapper {
 
     /**
-     * A default {@link MediaStreamMapper} implementation that adds standard ffmpeg mapping and codec selection arguments to the
-     * given {@link Binary}, with additional parameters for video streams.
+     * A default {@link MediaStreamMapper} implementation that adds standard ffmpeg mapping and codec selection
+     * arguments to the given {@link Binary}, with additional parameters for video streams.
      * <p>
      * Specifically, it:
      * <ul>
@@ -43,8 +44,8 @@ public interface MediaStreamMapper {
     }).onlyIf((stream, codec) -> !stream.getDispositions().contains(Disposition.ATTACHED_PIC));
 
     /**
-     * Applies mapping logic to the given {@link MediaStream} and {@link Codec}, inserting any required arguments or metadata into
-     * the target {@link Binary}.
+     * Applies mapping logic to the given {@link MediaStream} and {@link Codec}, inserting any required arguments or
+     * metadata into the target {@link Binary}.
      *
      * @param binary
      *         The target {@link Binary} to populate with arguments or metadata.
@@ -56,8 +57,8 @@ public interface MediaStreamMapper {
     void map(Binary binary, MediaStream stream, Codec codec);
 
     /**
-     * Chains this mapper with another, applying both mappers in sequence. The current mapper is invoked first, followed by the
-     * {@code other}.
+     * Chains this mapper with another, applying both mappers in sequence. The current mapper is invoked first, followed
+     * by the {@code other}.
      *
      * @param other
      *         The {@link MediaStreamMapper} to invoke after this one.

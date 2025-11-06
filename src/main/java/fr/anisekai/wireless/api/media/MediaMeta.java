@@ -13,8 +13,9 @@ import java.util.Map;
 /**
  * Represents a single media track (such as audio, video, or subtitle) used to reassemble a complete media file.
  * <p>
- * This class encapsulates the metadata of a media file, including its file path, optional name, language, and codec. It is
- * typically used as input for the {@link FFMpeg#combine(MediaMeta)} method to combine tracks into a unified media container.
+ * This class encapsulates the metadata of a media file, including its file path, optional name, language, and codec. It
+ * is typically used as input for the {@link FFMpeg#combine(MediaMeta)} method to combine tracks into a unified media
+ * container.
  */
 public class MediaMeta {
 

@@ -110,12 +110,12 @@ public class AnisekaiJson extends JSONObject {
     }
 
     /**
-     * Traverses a JSON tree structure following a dot-separated path and applies a terminal function on the final node, which can
-     * be a {@link JSONObject} or {@link JSONArray}.
+     * Traverses a JSON tree structure following a dot-separated path and applies a terminal function on the final node,
+     * which can be a {@link JSONObject} or {@link JSONArray}.
      *
      * <p>Each segment in the path represents either a key in a {@link JSONObject} or an index in a {@link JSONArray}.
-     * The method descends into the structure step by step and invokes the appropriate handler function when the final node is
-     * reached.</p>
+     * The method descends into the structure step by step and invokes the appropriate handler function when the final
+     * node is reached.</p>
      *
      * @param path
      *         The dot-separated path (e.g., "config.display.theme").
@@ -160,13 +160,18 @@ public class AnisekaiJson extends JSONObject {
                 );
 
                 if (isLast) return ifJsonArray.apply(array, idx);
-                if (idx >= array.length()) throw new JSONException(String.format("[%s] Index was out of bounds", currentPath));
+                if (idx >= array.length()) {
+                    throw new JSONException(String.format("[%s] Index was out of bounds", currentPath));
+                }
 
                 currentNode = array.get(idx);
                 continue;
             }
 
-            throw new UnsupportedOperationException("Encountered unsupported type: " + currentNode.getClass().getSimpleName());
+            throw new UnsupportedOperationException(String.format(
+                    "Encountered unsupported type: %s",
+                    currentNode.getClass().getSimpleName()
+            ));
         }
 
         // We should never get here, but this is to suppress error/warning messages.
@@ -217,9 +222,9 @@ public class AnisekaiJson extends JSONObject {
     }
 
     /**
-     * Check if the path provided lead to an existing value within that {@link AnisekaiJson} and its subitems. This does not check
-     * for nullability of the value; as long as the key exists, whether the underlying value is null or not, the key will still be
-     * considered as "existing".
+     * Check if the path provided lead to an existing value within that {@link AnisekaiJson} and its subitems. This does
+     * not check for nullability of the value; as long as the key exists, whether the underlying value is null or not,
+     * the key will still be considered as "existing".
      *
      * @param path
      *         The dot-separated path (e.g., "config.display.theme").
@@ -399,8 +404,9 @@ public class AnisekaiJson extends JSONObject {
      * @param <T>
      *         Type of the items, as defined by the provided mapper.
      *
-     * @return An {@link Optional} {@link List}. If the {@link Optional} is empty, it means that the {@link List} was not found.
-     *         If the {@link List} is empty, however, it means that the underlying {@link JSONArray} exists but is really empty.
+     * @return An {@link Optional} {@link List}. If the {@link Optional} is empty, it means that the {@link List} was
+     *         not found. If the {@link List} is empty, however, it means that the underlying {@link JSONArray} exists
+     *         but is really empty.
      */
     public <T> Optional<List<T>> getOptionalList(@NotNull String path, @NotNull Function<AnisekaiJson, T> mapper) {
 
@@ -520,7 +526,8 @@ public class AnisekaiJson extends JSONObject {
      */
     public ZonedDateTime readZonedDateTime(@NotNull String path) {
 
-        return this.getOptionalZonedDateTime(path).orElseThrow(() -> new JSONException("[%s] not found.".formatted(path)));
+        return this.getOptionalZonedDateTime(path)
+                   .orElseThrow(() -> new JSONException("[%s] not found.".formatted(path)));
     }
 
     /**
@@ -559,11 +566,13 @@ public class AnisekaiJson extends JSONObject {
      * @param <T>
      *         Type of the items, as defined by the provided mapper.
      *
-     * @return A {@link List}. If the {@link List} is empty, it means that the underlying {@link JSONArray} exists but is empty.
+     * @return A {@link List}. If the {@link List} is empty, it means that the underlying {@link JSONArray} exists but
+     *         is empty.
      */
     public <T> List<T> readList(@NotNull String path, @NotNull Function<AnisekaiJson, T> mapper) {
 
-        return this.getOptionalList(path, mapper).orElseThrow(() -> new JSONException("[%s] not found.".formatted(path)));
+        return this.getOptionalList(path, mapper)
+                   .orElseThrow(() -> new JSONException("[%s] not found.".formatted(path)));
     }
 
     /**

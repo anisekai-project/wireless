@@ -38,7 +38,8 @@ public abstract class FFMpegCommandTask<T> implements FFMpegCommand<T> {
     }
 
     /**
-     * Method called before the execution of ffmpeg, allowing tasks to implement their own logic for the process arguments.
+     * Method called before the execution of ffmpeg, allowing tasks to implement their own logic for the process
+     * arguments.
      *
      * @param ffmpeg
      *         The {@link Binary} instance in use.
@@ -49,8 +50,8 @@ public abstract class FFMpegCommandTask<T> implements FFMpegCommand<T> {
     public abstract void preprocess(Binary ffmpeg) throws IOException;
 
     /**
-     * Method called after the execution of ffmpeg, allowing tasks to implement their own logic for task cleanup and returning the
-     * expected result.
+     * Method called after the execution of ffmpeg, allowing tasks to implement their own logic for task cleanup and
+     * returning the expected result.
      *
      * @param code
      *         The ffmpeg exit code.

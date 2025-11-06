@@ -39,8 +39,8 @@ public enum AnimeList {
     DOWNLOADED("\uD83D\uDCD7", Property.WATCHABLE),
 
     /**
-     * The {@link AnimeEntity} has still some of its {@link EpisodeEntity} being processed. This can be used only if all episodes
-     * are released officially.
+     * The {@link AnimeEntity} has still some of its {@link EpisodeEntity} being processed. This can be used only if all
+     * episodes are released officially.
      */
     DOWNLOADING("\uD83D\uDCD8"),
 
@@ -50,8 +50,8 @@ public enum AnimeList {
     NOT_DOWNLOADED("\uD83D\uDCD5"),
 
     /**
-     * The {@link AnimeEntity} has been added to the database, but no source to download any {@link EpisodeEntity} has been
-     * found.
+     * The {@link AnimeEntity} has been added to the database, but no source to download any {@link EpisodeEntity} has
+     * been found.
      */
     NO_SOURCE("\uD83D\uDCD9"),
 

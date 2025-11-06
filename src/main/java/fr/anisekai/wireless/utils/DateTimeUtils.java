@@ -67,11 +67,12 @@ public final class DateTimeUtils {
     }
 
     /**
-     * Create a {@link ZonedDateTime} using provided time and date as string representation. Both arguments are optional and will
-     * default to their current system value if not provided ({@link LocalTime#now()} and {@link LocalDate#now()} respectively)
+     * Create a {@link ZonedDateTime} using provided time and date as string representation. Both arguments are optional
+     * and will default to their current system value if not provided ({@link LocalTime#now()} and
+     * {@link LocalDate#now()} respectively)
      * <p>
-     * Although possible, sending 2 null values will return the same result as calling {@link ZonedDateTime#now()}, in a less
-     * efficient way.
+     * Although possible, sending 2 null values will return the same result as calling {@link ZonedDateTime#now()}, in a
+     * less efficient way.
      *
      * @param time
      *         The optional time for the {@link ZonedDateTime}.
@@ -88,11 +89,12 @@ public final class DateTimeUtils {
     }
 
     /**
-     * Create a {@link ZonedDateTime} using provided {@link LocalTime} and {@link LocalDate}. Both arguments are optional and will
-     * default to their current system value if not provided ({@link LocalTime#now()} and {@link LocalDate#now()} respectively)
+     * Create a {@link ZonedDateTime} using provided {@link LocalTime} and {@link LocalDate}. Both arguments are
+     * optional and will default to their current system value if not provided ({@link LocalTime#now()} and
+     * {@link LocalDate#now()} respectively)
      * <p>
-     * Although possible, sending 2 null values will return the same result as calling {@link ZonedDateTime#now()}, in a less
-     * efficient way.
+     * Although possible, sending 2 null values will return the same result as calling {@link ZonedDateTime#now()}, in a
+     * less efficient way.
      *
      * @param time
      *         The optional {@link LocalTime} for the {@link ZonedDateTime}.

@@ -34,8 +34,8 @@ public final class StringUtils {
     }
 
     /**
-     * Cut the provided {@link CharSequence} to size, appending '...' within the string to leave {@code after} characters
-     * afterward if its length is above the provided threshold.
+     * Cut the provided {@link CharSequence} to size, appending '...' within the string to leave {@code after}
+     * characters afterward if its length is above the provided threshold.
      *
      * @param charSequence
      *         The {@link CharSequence} to truncate if necessary
@@ -151,8 +151,8 @@ public final class StringUtils {
     }
 
     /**
-     * Attempts to parse an integer from the input string. If parsing fails, the given exception supplier is used to throw a
-     * custom exception.
+     * Attempts to parse an integer from the input string. If parsing fails, the given exception supplier is used to
+     * throw a custom exception.
      *
      * @param input
      *         The input string to parse

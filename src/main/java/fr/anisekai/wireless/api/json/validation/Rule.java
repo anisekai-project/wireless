@@ -10,14 +10,15 @@ import org.json.JSONObject;
 import java.util.Optional;
 
 /**
- * Abstract base implementation of a {@link JsonRule} representing a validation rule applied to a specific key within a JSON
- * structure.
+ * Abstract base implementation of a {@link JsonRule} representing a validation rule applied to a specific key within a
+ * JSON structure.
  * <p>
- * Each instance targets a particular JSON key and defines whether its presence is mandatory. Subclasses are expected to implement
- * the rule's specific logic, leveraging helper methods like {@link #retrieve(AnisekaiJson)}, {@link #asArray(Object, boolean)},
- * and {@link #asObject(Object, int)} for extraction and type validation.
+ * Each instance targets a particular JSON key and defines whether its presence is mandatory. Subclasses are expected to
+ * implement the rule's specific logic, leveraging helper methods like {@link #retrieve(AnisekaiJson)},
+ * {@link #asArray(Object, boolean)}, and {@link #asObject(Object, int)} for extraction and type validation.
  * <p>
- * If a required key is missing or its value is of an incompatible type, meaningful exceptions are thrown to aid in debugging.
+ * If a required key is missing or its value is of an incompatible type, meaningful exceptions are thrown to aid in
+ * debugging.
  */
 public abstract class Rule implements JsonRule {
 
@@ -30,7 +31,8 @@ public abstract class Rule implements JsonRule {
      * @param key
      *         The key in the JSON object this rule applies to.
      * @param required
-     *         Whether the key is mandatory. If {@code true}, a missing or {@code null} value will cause validation to fail.
+     *         Whether the key is mandatory. If {@code true}, a missing or {@code null} value will cause validation to
+     *         fail.
      */
     public Rule(String key, boolean required) {
 

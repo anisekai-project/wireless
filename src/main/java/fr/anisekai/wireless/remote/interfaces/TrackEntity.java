@@ -94,4 +94,5 @@ public interface TrackEntity<E extends EpisodeEntity<?>> extends Entity<Long> {
      *         A bit value.
      */
     void setDispositions(int dispositions);
+
 }

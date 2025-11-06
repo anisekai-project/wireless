@@ -10,7 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Custom implementation of a {@link RestAction} allowing to send an authentication request to a transmission daemon api.
+ * Custom implementation of a {@link RestAction} allowing to send an authentication request to a transmission daemon
+ * api.
  */
 public class TransmissionAuthPacket extends RestAction<AnisekaiJson> {
 

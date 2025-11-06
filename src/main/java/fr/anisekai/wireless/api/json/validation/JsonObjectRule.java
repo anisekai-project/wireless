@@ -47,7 +47,10 @@ public class JsonObjectRule extends Rule {
 
         this.retrieve(json).ifPresent(obj -> {
             if (Arrays.stream(this.allowedTypes).noneMatch(type -> type.isInstance(obj))) {
-                throw new JSONValidationException(this, String.format(RULE_EX_MSG, this, obj.getClass().getSimpleName()));
+                throw new JSONValidationException(
+                        this,
+                        String.format(RULE_EX_MSG, this, obj.getClass().getSimpleName())
+                );
             }
         });
     }

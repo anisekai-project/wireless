@@ -17,8 +17,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Specific implementation {@link FFMpegCommand} allowing to convert a {@link MediaFile} into a single file or split its stream
- * into multiple files.
+ * Specific implementation {@link FFMpegCommand} allowing to convert a {@link MediaFile} into a single file or split its
+ * stream into multiple files.
  *
  * @param <T>
  *         The type of the result for this {@link ConvertTask}.
@@ -47,7 +47,16 @@ public final class ConvertTask<T> extends FFMpegCommandTask<T> {
      */
     public static ConvertTask<Path> of(MediaFile input, Codec video, Codec audio, Codec subtitle, MediaStreamMapper streamMapper, Path outputDir, String filename) {
 
-        return new ConvertTask<>(ConvertTask::getOutputFile, input, video, audio, subtitle, streamMapper, outputDir, filename);
+        return new ConvertTask<>(
+                ConvertTask::getOutputFile,
+                input,
+                video,
+                audio,
+                subtitle,
+                streamMapper,
+                outputDir,
+                filename
+        );
     }
 
     /**

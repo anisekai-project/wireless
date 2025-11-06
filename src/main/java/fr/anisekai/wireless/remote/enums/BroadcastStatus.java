@@ -40,8 +40,9 @@ public enum BroadcastStatus {
     }
 
     /**
-     * Check if tDiscord would accept a cancel query on the current {@link BroadcastStatus}. This is completely different from
-     * knowing if a {@link BroadcastEntity} is cancelable or not, as it is completely dependent on the implementation.
+     * Check if tDiscord would accept a cancel query on the current {@link BroadcastStatus}. This is completely
+     * different from knowing if a {@link BroadcastEntity} is cancelable or not, as it is completely dependent on the
+     * implementation.
      *
      * @return True if it requires a Discord request to be completely canceled, false otherwise.
      */

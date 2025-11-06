@@ -9,7 +9,8 @@ package fr.anisekai.wireless.api.plannifier.exceptions;
 public class NotSchedulableException extends RuntimeException implements FriendlyException {
 
     /**
-     * Create a {@link NotSchedulableException} with a default message indicating that no valid scheduling slot is available.
+     * Create a {@link NotSchedulableException} with a default message indicating that no valid scheduling slot is
+     * available.
      */
     public NotSchedulableException() {
 

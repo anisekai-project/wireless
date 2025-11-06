@@ -7,7 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.Serializable;
 
 /**
- * A composite key representing a voter's participation in a specific selection, identified by the selection ID and voter ID.
+ * A composite key representing a voter's participation in a specific selection, identified by the selection ID and
+ * voter ID.
  *
  * @param selection
  *         The ID of the selection

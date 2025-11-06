@@ -32,8 +32,8 @@ public interface WatchTarget {
     void setWatched(int watched);
 
     /**
-     * Retrieve the total amount of episode for this {@link WatchTarget}. Negative values will be used for a temporary estimation
-     * of the total amount of episode.
+     * Retrieve the total amount of episode for this {@link WatchTarget}. Negative values will be used for a temporary
+     * estimation of the total amount of episode.
      *
      * @return Number of episode in total
      */

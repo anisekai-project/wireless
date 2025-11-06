@@ -34,8 +34,8 @@ public interface JsonRule {
     boolean isRequired();
 
     /**
-     * Retrieve this {@link JsonRule} name. This should be a human-readable name so that any developer can quickly find the rule
-     * in case it fails.
+     * Retrieve this {@link JsonRule} name. This should be a human-readable name so that any developer can quickly find
+     * the rule in case it fails.
      *
      * @return This {@link JsonRule} name.
      */

@@ -6,23 +6,24 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 /**
- * Utility class providing helper methods for working with Java Reflection, especially around method signature comparison and
- * annotation resolution in interface hierarchies.
+ * Utility class providing helper methods for working with Java Reflection, especially around method signature
+ * comparison and annotation resolution in interface hierarchies.
  * <p>
- * This class is primarily used to locate methods annotated with a specific {@link Annotation} even when the annotation exists
- * only on an interface method and not on the implementation. It supports accurate method matching by comparing method signatures
- * (name, return type, and parameter types).
+ * This class is primarily used to locate methods annotated with a specific {@link Annotation} even when the annotation
+ * exists only on an interface method and not on the implementation. It supports accurate method matching by comparing
+ * method signatures (name, return type, and parameter types).
  */
 public final class ReflectionUtils {
 
     private ReflectionUtils() {}
 
     /**
-     * Searches for the nearest {@link Method} annotated with the specified {@link Annotation} in the given method's declaring
-     * class or its interfaces.
+     * Searches for the nearest {@link Method} annotated with the specified {@link Annotation} in the given method's
+     * declaring class or its interfaces.
      * <p>
-     * If the annotation is not present on the {@link Method} itself, this method will recursively inspect all interfaces
-     * implemented by the declaring class to find a matching {@link Method} (based on signature) that is annotated.
+     * If the annotation is not present on the {@link Method} itself, this method will recursively inspect all
+     * interfaces implemented by the declaring class to find a matching {@link Method} (based on signature) that is
+     * annotated.
      *
      * @param method
      *         The {@link Method} on which the {@link Annotation} might appear.
@@ -78,8 +79,8 @@ public final class ReflectionUtils {
     }
 
     /**
-     * Determines if two methods have the same signature by comparing their names, return types, and parameter types. This won't
-     * check the method body.
+     * Determines if two methods have the same signature by comparing their names, return types, and parameter types.
+     * This won't check the method body.
      *
      * @param a
      *         The first method

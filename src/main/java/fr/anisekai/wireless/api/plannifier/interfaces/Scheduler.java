@@ -12,8 +12,8 @@ import java.util.Set;
 
 /**
  * Defines a generic scheduler capable of managing and orchestrating {@link Planifiable} entities over time for a given
- * {@link WatchTarget} type. A {@link  Scheduler} provides both querying and modification capabilities over a scheduled state,
- * including temporal navigation, validation, insertion, and recalibration of planned events.
+ * {@link WatchTarget} type. A {@link  Scheduler} provides both querying and modification capabilities over a scheduled
+ * state, including temporal navigation, validation, insertion, and recalibration of planned events.
  *
  * @param <T>
  *         The type of {@link WatchTarget} being scheduled.
@@ -65,8 +65,8 @@ public interface Scheduler<T extends WatchTarget, I extends Planifiable<T>, E ex
     Optional<E> findNext(ZonedDateTime when);
 
     /**
-     * Check in the current state for a {@link Planifiable} starting right before the provided {@link ZonedDateTime} while
-     * matching the provided {@link WatchTarget}.
+     * Check in the current state for a {@link Planifiable} starting right before the provided {@link ZonedDateTime}
+     * while matching the provided {@link WatchTarget}.
      *
      * @param when
      *         {@link ZonedDateTime} filtering all {@link Planifiable} possible in the state.
@@ -78,8 +78,8 @@ public interface Scheduler<T extends WatchTarget, I extends Planifiable<T>, E ex
     Optional<E> findPrevious(ZonedDateTime when, T target);
 
     /**
-     * Check in the current state for a {@link Planifiable} starting right after the provided {@link ZonedDateTime} while matching
-     * the provided {@link WatchTarget}.
+     * Check in the current state for a {@link Planifiable} starting right after the provided {@link ZonedDateTime}
+     * while matching the provided {@link WatchTarget}.
      *
      * @param when
      *         {@link ZonedDateTime} filtering all planifiable possible in the state.
@@ -102,8 +102,8 @@ public interface Scheduler<T extends WatchTarget, I extends Planifiable<T>, E ex
     boolean canSchedule(ScheduleSpotData<T> spot);
 
     /**
-     * Schedule the provided {@link ScheduleSpotData} within this {@link Scheduler}. This will automatically update its internal
-     * state.
+     * Schedule the provided {@link ScheduleSpotData} within this {@link Scheduler}. This will automatically update its
+     * internal state.
      *
      * @param spot
      *         {@link ScheduleSpotData} to use as source for scheduling data.
@@ -117,8 +117,8 @@ public interface Scheduler<T extends WatchTarget, I extends Planifiable<T>, E ex
     // <editor-fold desc="State Actions">
 
     /**
-     * Delay by the provided amount every {@link Planifiable} being in the interval. The interval is defined by a starting
-     * {@link ZonedDateTime} and a duration.
+     * Delay by the provided amount every {@link Planifiable} being in the interval. The interval is defined by a
+     * starting {@link ZonedDateTime} and a duration.
      *
      * @param from
      *         {@link ZonedDateTime} defining the start of the interval
@@ -132,8 +132,8 @@ public interface Scheduler<T extends WatchTarget, I extends Planifiable<T>, E ex
     List<E> delay(ZonedDateTime from, Duration interval, Duration delay);
 
     /**
-     * Reprocesses all scheduled entities to ensure episode counts and durations are consistent. This process may trim or adjust
-     * entries that are misaligned or redundant.
+     * Reprocesses all scheduled entities to ensure episode counts and durations are consistent. This process may trim
+     * or adjust entries that are misaligned or redundant.
      * <p>
      * Existing events will not be merged.
      *

@@ -31,9 +31,9 @@ import java.util.stream.Stream;
 public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E extends I> implements Scheduler<T, I, E> {
 
     /**
-     * If two {@link Planifiable} are of the following duration apart, they will be merged once scheduled. The duration is done by
-     * comparing one {@link Planifiable#getStartingAt()} with the endpoint of another {@link Planifiable}, being
-     * {@link Planifiable#getStartingAt()} + {@link Planifiable#getDuration()}.
+     * If two {@link Planifiable} are of the following duration apart, they will be merged once scheduled. The duration
+     * is done by comparing one {@link Planifiable#getStartingAt()} with the endpoint of another {@link Planifiable},
+     * being {@link Planifiable#getStartingAt()} + {@link Planifiable#getDuration()}.
      */
     private static final Duration MERGE_MAGNET_LIMIT = Duration.ofMinutes(10);
 
@@ -60,9 +60,9 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
     }
 
     /**
-     * Create a {@link Stream} of the current {@link EventScheduler} state, where every item will be filtered based on the return
-     * value of {@link ScheduleSpotData#getStartingAt()}. If the returned value is before or equals to the provided
-     * {@link ZonedDateTime}, the item will be kept.
+     * Create a {@link Stream} of the current {@link EventScheduler} state, where every item will be filtered based on
+     * the return value of {@link ScheduleSpotData#getStartingAt()}. If the returned value is before or equals to the
+     * provided {@link ZonedDateTime}, the item will be kept.
      *
      * @param when
      *         The {@link ZonedDateTime} delimiting item filtering.
@@ -75,9 +75,9 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
     }
 
     /**
-     * Create a {@link Stream} of the current {@link EventScheduler} state, where every item will be filtered based on the return
-     * value of {@link ScheduleSpotData#getStartingAt()}. If the returned value is after or equals to the provided
-     * {@link ZonedDateTime}, the item will be kept.
+     * Create a {@link Stream} of the current {@link EventScheduler} state, where every item will be filtered based on
+     * the return value of {@link ScheduleSpotData#getStartingAt()}. If the returned value is after or equals to the
+     * provided {@link ZonedDateTime}, the item will be kept.
      *
      * @param when
      *         The {@link ZonedDateTime} delimiting item filtering.
@@ -198,7 +198,7 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
 
         if (isPrevCombinable) {
 
-            E    prev     = optPrev.get();
+            E   prev     = optPrev.get();
             int newCount = prev.getEpisodeCount() + spot.getEpisodeCount();
 
             E updated = this.getManager().update(prev, item -> item.setEpisodeCount(newCount));
@@ -210,7 +210,7 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
 
         if (isNextCombinable) {
 
-            E    next     = optNext.get();
+            E   next     = optNext.get();
             int newCount = next.getEpisodeCount() + spot.getEpisodeCount();
             int firstEpisode = optTargetPrev
                     .map(item -> item.getFirstEpisode() + item.getEpisodeCount())
@@ -270,7 +270,8 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
         }
 
         // Apply the modification for real now
-        List<E> updated = this.getManager().updateAll(events, item -> item.setStartingAt(item.getStartingAt().plus(delay)));
+        List<E> updated = this.getManager()
+                              .updateAll(events, item -> item.setStartingAt(item.getStartingAt().plus(delay)));
         // And update the internal state to keep track
         events.forEach(item -> item.setStartingAt(item.getStartingAt().plus(delay)));
 
@@ -285,17 +286,17 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
 
         // Store the max possible episode for each target
         Map<T, Integer> targetMaxEpisode = this.getState()
-                                            .stream()
-                                            .map(ScheduleSpotData::getWatchTarget)
-                                            .distinct()
-                                            .collect(new MapCollector<>(WatchTarget::getTotal));
+                                               .stream()
+                                               .map(ScheduleSpotData::getWatchTarget)
+                                               .distinct()
+                                               .collect(new MapCollector<>(WatchTarget::getTotal));
 
         // Store the progress for each target
         Map<T, Integer> targetProgression = this.getState()
-                                             .stream()
-                                             .map(ScheduleSpotData::getWatchTarget)
-                                             .distinct()
-                                             .collect(new MapCollector<>(WatchTarget::getWatched));
+                                                .stream()
+                                                .map(ScheduleSpotData::getWatchTarget)
+                                                .distinct()
+                                                .collect(new MapCollector<>(WatchTarget::getWatched));
 
         List<E> sorted = this.getState()
                              .stream()
@@ -350,8 +351,8 @@ public class EventScheduler<T extends WatchTarget, I extends Planifiable<T>, E e
     }
 
     /**
-     * Check if the two provided {@link ScheduleSpotData} can be merged. This is where the rule of merging should be decided
-     * (timing, content, etc...)
+     * Check if the two provided {@link ScheduleSpotData} can be merged. This is where the rule of merging should be
+     * decided (timing, content, etc...)
      *
      * @param element
      *         The first {@link ScheduleSpotData}

@@ -13,8 +13,8 @@ import java.nio.file.Path;
 /**
  * Utility class providing static methods to interact with ffmpeg and ffprobe binaries.
  * <p>
- * Supports probing media files for stream information, extracting streams into separate files, and combining multiple media
- * streams into a single output file.
+ * Supports probing media files for stream information, extracting streams into separate files, and combining multiple
+ * media streams into a single output file.
  */
 public final class FFMpeg {
 
@@ -34,7 +34,8 @@ public final class FFMpeg {
     }
 
     /**
-     * Create a {@link ConvertCommandBuilder} to configure a {@link FFMpegCommand} allowing to convert a {@link MediaFile}.
+     * Create a {@link ConvertCommandBuilder} to configure a {@link FFMpegCommand} allowing to convert a
+     * {@link MediaFile}.
      *
      * @param input
      *         The {@link MediaFile} to convert
@@ -61,8 +62,8 @@ public final class FFMpeg {
     }
 
     /**
-     * Create a {@link MpdCommandBuilder} to configure a {@link FFMpegCommand} allowing to generate a meta file and chunks from a
-     * {@link MediaFile}.
+     * Create a {@link MpdCommandBuilder} to configure a {@link FFMpegCommand} allowing to generate a meta file and
+     * chunks from a {@link MediaFile}.
      *
      * @param input
      *         The {@link MediaFile} for which the meta and chunks will be generated.

@@ -5,7 +5,8 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Represents various multimedia codecs used for video, audio, and subtitle encoding/decoding.
  * <p>
- * Each codec is associated with a {@link CodecType}, a default file extension, and the corresponding library codec name.
+ * Each codec is associated with a {@link CodecType}, a default file extension, and the corresponding library codec
+ * name.
  */
 public enum Codec {
 
@@ -159,8 +160,8 @@ public enum Codec {
             case PGS -> "sup";
             case DVB_SUB -> "sub";
             case SSA -> "ssa";
-            case AUDIO_COPY, VIDEO_COPY, SUBTITLE_COPY ->
-                    throw new IllegalStateException("*_COPY codecs are special codec and thus does not support file extensions");
+            case AUDIO_COPY, VIDEO_COPY, SUBTITLE_COPY -> throw new IllegalStateException(
+                    "*_COPY codecs are special codec and thus does not support file extensions");
             // This feel so wrong
             case PNG -> "png";
             case MJPEG -> "jpg";
@@ -243,8 +244,8 @@ public enum Codec {
             case ASS, SSA -> "text/x-ssa";
             case PGS -> "application/pgs";
             case DVB_SUB -> "application/dvbsubs";
-            case VIDEO_COPY, AUDIO_COPY, SUBTITLE_COPY ->
-                    throw new IllegalStateException("*_COPY codecs are special codec and thus does not support mime type");
+            case VIDEO_COPY, AUDIO_COPY, SUBTITLE_COPY -> throw new IllegalStateException(
+                    "*_COPY codecs are special codec and thus does not support mime type");
             // This feel so wrong
             case PNG -> "image/png";
             case MJPEG -> "image/jpeg";

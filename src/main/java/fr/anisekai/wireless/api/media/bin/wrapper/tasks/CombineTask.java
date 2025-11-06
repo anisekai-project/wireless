@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Specific implementation {@link FFMpegCommand} allowing to combine multiple {@link MediaMeta} into a single file represented by
- * a {@link Path}.
+ * Specific implementation {@link FFMpegCommand} allowing to combine multiple {@link MediaMeta} into a single file
+ * represented by a {@link Path}.
  */
 public class CombineTask extends FFMpegCommandTask<Path> {
 

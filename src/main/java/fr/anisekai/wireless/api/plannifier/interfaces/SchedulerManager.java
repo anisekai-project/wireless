@@ -9,16 +9,16 @@ import java.util.function.Consumer;
 /**
  * Defines the contract for handling persistence and updates of scheduled entities within a {@link Scheduler}.
  * <p>
- * This interface acts as a bridge between the scheduler logic and the underlying data store, allowing CRUD-like operations to be
- * abstracted and decoupled from the scheduling implementation.
+ * This interface acts as a bridge between the scheduler logic and the underlying data store, allowing CRUD-like
+ * operations to be abstracted and decoupled from the scheduling implementation.
  *
  * @param <T>
  *         The type of the {@link WatchTarget} associated with the planifiable elements.
  * @param <I>
  *         The planifiable type used for scheduling logic. Usually a base or mutable interface.
  * @param <E>
- *         The concrete persisted entity type, typically extending {@code I} and representing the database-aware version of the
- *         planifiable.
+ *         The concrete persisted entity type, typically extending {@code I} and representing the database-aware version
+ *         of the planifiable.
  */
 public interface SchedulerManager<T extends WatchTarget, I extends Planifiable<T>, E extends I> {
 
@@ -35,8 +35,8 @@ public interface SchedulerManager<T extends WatchTarget, I extends Planifiable<T
     /**
      * Updates a single persisted entity using the provided update hook.
      * <p>
-     * The update hook receives a mutable reference to the underlying planifiable data, which should be modified in-place. The
-     * updated state is then persisted.
+     * The update hook receives a mutable reference to the underlying planifiable data, which should be modified
+     * in-place. The updated state is then persisted.
      *
      * @param entity
      *         The entity to be updated.
@@ -50,7 +50,8 @@ public interface SchedulerManager<T extends WatchTarget, I extends Planifiable<T
     /**
      * Updates multiple persisted entities in batch using the same update logic.
      * <p>
-     * The update hook is applied to each individual entity in the collection, and all changes are persisted accordingly.
+     * The update hook is applied to each individual entity in the collection, and all changes are persisted
+     * accordingly.
      *
      * @param entities
      *         The list of entities to update.

@@ -14,7 +14,8 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * A {@link FFMpegCommand} builder specifically built to convert a {@link MediaFile} streams into a single or multiple files.
+ * A {@link FFMpegCommand} builder specifically built to convert a {@link MediaFile} streams into a single or multiple
+ * files.
  */
 public class ConvertCommandBuilder {
 
@@ -183,9 +184,9 @@ public class ConvertCommandBuilder {
     }
 
     /**
-     * Set the base {@link Path} into which ffmpeg will be run. If using {@link #split()}, this will define the directory into
-     * which all files will be extracted. If using {@link #file(String)}, this will be used as the containing directory to resolve
-     * the full path of the output.
+     * Set the base {@link Path} into which ffmpeg will be run. If using {@link #split()}, this will define the
+     * directory into which all files will be extracted. If using {@link #file(String)}, this will be used as the
+     * containing directory to resolve the full path of the output.
      *
      * @param directory
      *         The {@link Path} pointing to a directory.
@@ -205,8 +206,8 @@ public class ConvertCommandBuilder {
     }
 
     /**
-     * Set the output {@link Path} into which the {@link MediaFile} will be converted. This will also feed the parent path of the
-     * provided one into {@link #into(Path)}.
+     * Set the output {@link Path} into which the {@link MediaFile} will be converted. This will also feed the parent
+     * path of the provided one into {@link #into(Path)}.
      *
      * @param file
      *         The {@link Path} pointing to a directory
@@ -225,8 +226,8 @@ public class ConvertCommandBuilder {
     }
 
     /**
-     * Set the output filename into which the {@link MediaFile} will be converted. If {@link #into(Path)} was not called earlier,
-     * the default runtime working directory will be used.
+     * Set the output filename into which the {@link MediaFile} will be converted. If {@link #into(Path)} was not called
+     * earlier, the default runtime working directory will be used.
      *
      * @param filename
      *         The filename
@@ -247,7 +248,8 @@ public class ConvertCommandBuilder {
     }
 
     /**
-     * Extract the {@link MediaFile} into multiple files. It will create one file for each {@link MediaStream} being managed.
+     * Extract the {@link MediaFile} into multiple files. It will create one file for each {@link MediaStream} being
+     * managed.
      *
      * @return A {@link FFMpegCommand} ready to convert the {@link MediaFile} streams into separate files.
      */

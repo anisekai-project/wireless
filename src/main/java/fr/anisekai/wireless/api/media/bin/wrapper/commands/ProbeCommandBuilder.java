@@ -41,7 +41,8 @@ public class ProbeCommandBuilder {
     }
 
     /**
-     * Set the {@link Path} pointing to the file into which the JSON data will be written before being read and deleted.
+     * Set the {@link Path} pointing to the file into which the JSON data will be written before being read and
+     * deleted.
      *
      * @param output
      *         The {@link Path} pointing to a file.

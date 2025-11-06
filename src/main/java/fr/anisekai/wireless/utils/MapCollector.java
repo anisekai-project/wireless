@@ -10,8 +10,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 /**
- * A custom {@link Collector} implementation that collects elements into a {@link Map}, using the element itself as the key and a
- * value derived from a mapping function.
+ * A custom {@link Collector} implementation that collects elements into a {@link Map}, using the element itself as the
+ * key and a value derived from a mapping function.
  *
  * @param <T>
  *         The type of input elements.

@@ -28,7 +28,8 @@ public record InterestKey(long anime, long user) implements Serializable {
      * @param user
      *         The {@link UserEntity}
      *
-     * @return A new {@link InterestKey} representing the link between an {@link AnimeEntity} and an {@link UserEntity}.
+     * @return A new {@link InterestKey} representing the link between an {@link AnimeEntity} and an
+     *         {@link UserEntity}.
      *
      * @throws AssertionError
      *         Threw if either {@link AnimeEntity#getId()} or {@link UserEntity#getId()} is {@code null}

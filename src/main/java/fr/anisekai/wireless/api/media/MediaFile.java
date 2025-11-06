@@ -16,7 +16,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Represents a multimedia file composed of various media streams such as audio, video, or subtitles.
  * <p>
- * This class wraps a physical {@link File} and the set of {@link MediaStream} tracks detected within it, parsed via ffmpeg.
+ * This class wraps a physical {@link File} and the set of {@link MediaStream} tracks detected within it, parsed via
+ * ffmpeg.
  */
 public final class MediaFile {
 

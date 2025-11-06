@@ -162,8 +162,9 @@ public interface AnimeEntity<U extends UserEntity> extends Entity<Long>, WatchTa
     @NotNull U getAddedBy();
 
     /**
-     * Define the {@link UserEntity} which first imported this {@link AnimeEntity} into the application. If this is called after
-     * the initial entity save, you are most likely doing this wrong and need to think about your life decisions.
+     * Define the {@link UserEntity} which first imported this {@link AnimeEntity} into the application. If this is
+     * called after the initial entity save, you are most likely doing this wrong and need to think about your life
+     * decisions.
      *
      * @param addedBy
      *         A {@link UserEntity}.

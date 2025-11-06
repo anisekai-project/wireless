@@ -19,7 +19,8 @@ public final class EntityUtils {
     /**
      * Compares two entities for equality based on their identifiers.
      * <p>
-     * If either entity is considered new (i.e., {@link Entity#isNew()} returns {@code true}), they are treated as not equal.
+     * If either entity is considered new (i.e., {@link Entity#isNew()} returns {@code true}), they are treated as not
+     * equal.
      *
      * @param entity
      *         The first {@link Entity} to compare
@@ -30,7 +31,8 @@ public final class EntityUtils {
      * @param <PK>
      *         The type of the primary key
      *
-     * @return {@code true} if both {@link Entity} objects are not new and have equal identifiers, {@code false} otherwise
+     * @return {@code true} if both {@link Entity} objects are not new and have equal identifiers, {@code false}
+     *         otherwise
      */
     public static <E extends Entity<PK>, PK extends Serializable> boolean equals(E entity, E other) {
 
@@ -43,8 +45,9 @@ public final class EntityUtils {
     /**
      * Compares two entities for equality using their identifiers, or a fallback value if either is new.
      * <p>
-     * If either entity is considered new (i.e., {@link Entity#isNew()} returns {@code true}), the provided function is used to
-     * compute a fallback value for comparison. Otherwise, the entities are compared based on their identifiers.
+     * If either entity is considered new (i.e., {@link Entity#isNew()} returns {@code true}), the provided function is
+     * used to compute a fallback value for comparison. Otherwise, the entities are compared based on their
+     * identifiers.
      *
      * @param entity
      *         The first {@link Entity} to compare
@@ -72,8 +75,8 @@ public final class EntityUtils {
     /**
      * Compares two entities based on their identifiers.
      * <p>
-     * New entities (i.e., {@link Entity#isNew()} returns {@code true}) are considered greater than persisted ones. If both are
-     * new, they are considered equal.
+     * New entities (i.e., {@link Entity#isNew()} returns {@code true}) are considered greater than persisted ones. If
+     * both are new, they are considered equal.
      *
      * @param entity
      *         The first {@link Entity} to compare
@@ -104,8 +107,8 @@ public final class EntityUtils {
     /**
      * Compares two entities instances using a sequence of {@link Comparator}s.
      * <p>
-     * The comparators are applied in order, and the first non-zero comparison result is returned. If all comparators return zero,
-     * the entities are considered equal.
+     * The comparators are applied in order, and the first non-zero comparison result is returned. If all comparators
+     * return zero, the entities are considered equal.
      *
      * @param entity
      *         The first {@link Entity} to compare

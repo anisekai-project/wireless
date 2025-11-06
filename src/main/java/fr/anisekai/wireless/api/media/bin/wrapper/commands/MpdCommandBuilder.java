@@ -8,8 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * A {@link FFMpegCommand} builder specifically built to convert a {@link MediaFile} streams into chunks with a DASH xml meta
- * file.
+ * A {@link FFMpegCommand} builder specifically built to convert a {@link MediaFile} streams into chunks with a DASH xml
+ * meta file.
  */
 public class MpdCommandBuilder {
 
@@ -48,8 +48,9 @@ public class MpdCommandBuilder {
     }
 
     /**
-     * Set the filename into which the meta file will be written. If {@link #into(Path)} was not called before, the current
-     * runtime working directory will be used as output directory. All chunks will be written alongside the metafile.
+     * Set the filename into which the meta file will be written. If {@link #into(Path)} was not called before, the
+     * current runtime working directory will be used as output directory. All chunks will be written alongside the
+     * metafile.
      *
      * @param filename
      *         The name of the metafile. Must have the extension 'mpd'.
@@ -59,7 +60,10 @@ public class MpdCommandBuilder {
     public FFMpegCommand<Path> as(String filename) {
 
         if (!filename.endsWith(".mpd")) {
-            throw new IllegalArgumentException(String.format("The file name '%s' does not have the .mpd extension", filename));
+            throw new IllegalArgumentException(String.format(
+                    "The file name '%s' does not have the .mpd extension",
+                    filename
+            ));
         }
 
         if (this.outputDirectory == null) {

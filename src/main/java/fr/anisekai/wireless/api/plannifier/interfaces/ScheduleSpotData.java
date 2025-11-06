@@ -10,8 +10,8 @@ import java.time.ZonedDateTime;
 /**
  * Represents metadata for a scheduled watch session, including timing, episode count, and skip preferences.
  * <p>
- * This interface abstracts the core information required to define a watchable "spot" on a schedule — such as the content being
- * watched, when it starts, how long it lasts, and whether opening/ending skips are enabled.
+ * This interface abstracts the core information required to define a watchable "spot" on a schedule — such as the
+ * content being watched, when it starts, how long it lasts, and whether opening/ending skips are enabled.
  * </p>
  *
  * @param <T>
@@ -50,15 +50,16 @@ public interface ScheduleSpotData<T extends WatchTarget> {
     void setStartingAt(@NotNull ZonedDateTime time);
 
     /**
-     * Retrieve the amount of episode that will be watched during this {@link ScheduleSpotData}. If not applicable, just return
-     * 1.
+     * Retrieve the amount of episode that will be watched during this {@link ScheduleSpotData}. If not applicable, just
+     * return 1.
      *
      * @return The amount of episode that will be watched.
      */
     int getEpisodeCount();
 
     /**
-     * Define the amount of episode that will be watched during this {@link ScheduleSpotData}. If not applicable, just set 1.
+     * Define the amount of episode that will be watched during this {@link ScheduleSpotData}. If not applicable, just
+     * set 1.
      *
      * @param episodeCount
      *         The amount of episode that will be watched.
@@ -73,13 +74,15 @@ public interface ScheduleSpotData<T extends WatchTarget> {
     boolean isSkipEnabled();
 
     /**
-     * Enable or disable skipping of openings and endings, typically for anime content. If enabled and more than one episode is
-     * scheduled, the total duration will be reduced by 3 minutes per additional episode to account for skipped openings and
-     * endings.
+     * Enable or disable skipping of openings and endings, typically for anime content. If enabled and more than one
+     * episode is scheduled, the total duration will be reduced by 3 minutes per additional episode to account for
+     * skipped openings and endings.
      * <p>
-     * <b>Details:</b> Anime episodes typically have a 1m30 opening and a 1m30 ending. When multiple episodes are scheduled
-     * and skipping is enabled, only the opening of the first and the ending of the last episode will be played. Each intermediate
-     * episode will therefore skip both its opening and ending — reducing the total duration by 3 minutes per skipped episode.
+     * <b>Details:</b> Anime episodes typically have a 1m30 opening and a 1m30 ending. When multiple episodes are
+     * scheduled
+     * and skipping is enabled, only the opening of the first and the ending of the last episode will be played. Each
+     * intermediate episode will therefore skip both its opening and ending — reducing the total duration by 3 minutes
+     * per skipped episode.
      * </p>
      *
      * @param skipEnabled
@@ -99,9 +102,9 @@ public interface ScheduleSpotData<T extends WatchTarget> {
     }
 
     /**
-     * Calculates the total {@link Duration} of this {@link Planifiable}, based on the episode count and episode duration. If
-     * {@link #isSkipEnabled()} is true and more than one episode is scheduled, the duration is reduced by 3 minutes for each
-     * skipped episode.
+     * Calculates the total {@link Duration} of this {@link Planifiable}, based on the episode count and episode
+     * duration. If {@link #isSkipEnabled()} is true and more than one episode is scheduled, the duration is reduced by
+     * 3 minutes for each skipped episode.
      *
      * @return The total duration.
      *

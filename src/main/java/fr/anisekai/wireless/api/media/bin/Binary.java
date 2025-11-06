@@ -83,8 +83,8 @@ public class Binary {
     }
 
     /**
-     * Add a "hold" execution command line argument. Those arguments will not be immediately appended to the command but instead
-     * will be held until {@link #commitHoldArguments} is called.
+     * Add a "hold" execution command line argument. Those arguments will not be immediately appended to the command but
+     * instead will be held until {@link #commitHoldArguments} is called.
      *
      * @param argument
      *         An argument
@@ -95,8 +95,8 @@ public class Binary {
     }
 
     /**
-     * Add multiple "hold" execution command line arguments. Those arguments will not be immediately appended to the command but
-     * instead will be held until {@link #commitHoldArguments} is called.
+     * Add multiple "hold" execution command line arguments. Those arguments will not be immediately appended to the
+     * command but instead will be held until {@link #commitHoldArguments} is called.
      *
      * @param args
      *         An array of arguments
@@ -116,8 +116,8 @@ public class Binary {
     }
 
     /**
-     * Execute this {@link Binary} and wait for the provided timeout. If the timeout is reached, the execution will be canceled
-     * and {@link InterruptedException} will be thrown.
+     * Execute this {@link Binary} and wait for the provided timeout. If the timeout is reached, the execution will be
+     * canceled and {@link InterruptedException} will be thrown.
      *
      * @param timeout
      *         The amount of unit to wait for the execution to finish.

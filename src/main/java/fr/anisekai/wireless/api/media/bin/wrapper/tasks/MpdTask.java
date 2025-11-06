@@ -21,7 +21,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Specific implementation {@link FFMpegCommand} allowing to convert a {@link MediaFile} into chunks with a DASH meta file.
+ * Specific implementation {@link FFMpegCommand} allowing to convert a {@link MediaFile} into chunks with a DASH meta
+ * file.
  */
 public class MpdTask extends FFMpegCommandTask<Path> {
 

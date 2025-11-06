@@ -63,16 +63,16 @@ public interface UserEntity extends Entity<Long> {
     void setAvatarUrl(@NotNull String avatarUrl);
 
     /**
-     * Retrieve this {@link UserEntity}'s emote. An emote will be used at various places in the application to represent the
-     * {@link UserEntity}.
+     * Retrieve this {@link UserEntity}'s emote. An emote will be used at various places in the application to represent
+     * the {@link UserEntity}.
      *
      * @return An unicode emote
      */
     @Nullable String getEmote();
 
     /**
-     * Define this {@link UserEntity}'s emote. An emote will be used at various places in the application to represent the
-     * {@link UserEntity}.
+     * Define this {@link UserEntity}'s emote. An emote will be used at various places in the application to represent
+     * the {@link UserEntity}.
      *
      * @param emote
      *         An unicode emote.
@@ -80,16 +80,16 @@ public interface UserEntity extends Entity<Long> {
     void setEmote(@Nullable String emote);
 
     /**
-     * Check if this {@link UserEntity} is active. An active {@link UserEntity} will be able to take part in seasonal selection
-     * and their votes will be counted toward an {@link AnimeEntity} score.
+     * Check if this {@link UserEntity} is active. An active {@link UserEntity} will be able to take part in seasonal
+     * selection and their votes will be counted toward an {@link AnimeEntity} score.
      *
      * @return True if this {@link UserEntity} is active, false otherwise.
      */
     boolean isActive();
 
     /**
-     * Check if this {@link UserEntity} is active. An active {@link UserEntity} will be able to take part in seasonal selection
-     * and their votes will be counted toward an {@link AnimeEntity} score.
+     * Check if this {@link UserEntity} is active. An active {@link UserEntity} will be able to take part in seasonal
+     * selection and their votes will be counted toward an {@link AnimeEntity} score.
      *
      * @param active
      *         True if this {@link UserEntity} is active, false otherwise.
@@ -112,16 +112,16 @@ public interface UserEntity extends Entity<Long> {
     void setAdministrator(boolean administrator);
 
     /**
-     * Check if this {@link UserEntity} is a guest. A guest {@link UserEntity} will only have limited access to the website and
-     * application, requiring manual approval from an application administrator.
+     * Check if this {@link UserEntity} is a guest. A guest {@link UserEntity} will only have limited access to the
+     * website and application, requiring manual approval from an application administrator.
      *
      * @return True if this {@link UserEntity} is a guest, false otherwise.
      */
     boolean isGuest();
 
     /**
-     * Define if this {@link UserEntity} is a guest. A guest {@link UserEntity} will only have limited access to the website and
-     * application, requiring manual approval from an application administrator.
+     * Define if this {@link UserEntity} is a guest. A guest {@link UserEntity} will only have limited access to the
+     * website and application, requiring manual approval from an application administrator.
      *
      * @param guest
      *         True if this {@link UserEntity} is a guest, false otherwise.
@@ -129,8 +129,8 @@ public interface UserEntity extends Entity<Long> {
     void setGuest(boolean guest);
 
     /**
-     * Retrieve this {@link UserEntity}'s api key. The api key will allow the {@link UserEntity} to access some route of the
-     * application REST API without needing to go through the oauth process.
+     * Retrieve this {@link UserEntity}'s api key. The api key will allow the {@link UserEntity} to access some route of
+     * the application REST API without needing to go through the oauth process.
      *
      * @return An API Key
      */
@@ -138,8 +138,8 @@ public interface UserEntity extends Entity<Long> {
     String getApiKey();
 
     /**
-     * Define this {@link UserEntity}'s api key. The api key will allow the {@link UserEntity} to access some route of the
-     * application REST API without needing to go through the oauth process.
+     * Define this {@link UserEntity}'s api key. The api key will allow the {@link UserEntity} to access some route of
+     * the application REST API without needing to go through the oauth process.
      *
      * @param apiKey
      *         An API Key
