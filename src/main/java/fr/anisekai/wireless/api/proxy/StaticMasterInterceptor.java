@@ -6,6 +6,8 @@ import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.This;
 import org.hibernate.proxy.ProxyFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -18,12 +20,16 @@ import java.util.Map;
  */
 public final class StaticMasterInterceptor {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(StaticMasterInterceptor.class);
+
     static final Map<Object, ClassProxyFactory> PROXY_OWNER_REGISTRY = Collections.synchronizedMap(new IdentityHashMap<>());
 
     private StaticMasterInterceptor() {}
 
     @RuntimeType
     public static Object intercept(@This Object self, @Origin Method method, @AllArguments Object[] args) throws Throwable {
+
+        LOGGER.trace("Proxying '{}()' on {}", method.getName(), self.getClass().getSimpleName());
 
         ClassProxyFactory owner = PROXY_OWNER_REGISTRY.get(self);
 

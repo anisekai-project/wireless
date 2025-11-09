@@ -3,6 +3,7 @@ package fr.anisekai.wireless.api.proxy.interfaces;
 
 import fr.anisekai.wireless.api.reflection.Property;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -15,7 +16,7 @@ import java.util.Map;
  * @param <T>
  *         The type of the object being proxied.
  */
-public interface State<T> extends Dirtyable, AutoCloseable {
+public interface State<T> extends Dirtyable, AutoCloseable, Serializable {
 
     /**
      * Returns the underlying, original object instance that is being proxied.

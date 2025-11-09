@@ -11,6 +11,7 @@ import fr.anisekai.wireless.api.reflection.Property;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serial;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -39,28 +40,31 @@ public class ClassProxyImpl<S> implements ProxyInterceptor<S> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClassProxyImpl.class);
 
-    private final ClassProxyFactory factory;
-    private final S                 instance;
-    private final S                 proxy;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
-    private final Map<Property, Object>         originalState;
-    private final Map<Property, Object>         differentialState;
-    private final Map<Method, Property>         methodLookup;
-    private final Map<Object, State<?>>         proxyContext;
-    private final ProxyPolicy                   policy;
-    private final Consumer<ProxyInterceptor<S>> clear;
+    private final transient ClassProxyFactory factory;
+    private final transient S                 instance;
+    private final transient S                 proxy;
+
+    private final transient Map<Property, Object>         originalState;
+    private final transient Map<Property, Object>         differentialState;
+    private final transient Map<Method, Property>         methodLookup;
+    private final transient ProxyPolicy                   policy;
+    private final transient Map<Object, State<?>>         proxyContext;
+    private final transient Consumer<ProxyInterceptor<S>> clear;
 
     /**
      * A map that holds the {@link Dirtyable} state handlers for sub-proxies. These are proxies for properties of the
      * main proxied object. This allows for recursively checking the dirty state of the entire object graph.
      */
-    private final Map<Property, Dirtyable> subProxyStates;
+    private final transient Map<Property, Dirtyable> subProxyStates;
 
     /**
      * A cache for the sub-proxy instances. This avoids creating new sub-proxy instances every time a getter is called
      * for a property that should be proxied.
      */
-    private final Map<Property, Object> subProxyCache;
+    private final transient Map<Property, Object> subProxyCache;
 
 
     /**
@@ -165,7 +169,7 @@ public class ClassProxyImpl<S> implements ProxyInterceptor<S> {
             return method.invoke(this, args);
         }
 
-        LOGGER.info("Intercepted {}", method.getName());
+        LOGGER.trace("Handling '{}()' on {}", method.getName(), this.instance.getClass().getSimpleName());
 
         Property property = this.methodLookup.get(method);
         if (property == null) {
