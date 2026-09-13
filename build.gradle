@@ -21,22 +21,40 @@ repositories {
     mavenLocal()
 }
 
+configurations {
+    mockitoAgent
+}
+
 dependencies {
     testImplementation platform(libs.junit.bom)
     testImplementation libs.junit.jupiter
     testRuntimeOnly libs.junit.platformLauncher
 
-    implementation(libs.alexpado.simpleHttpClient)
-    implementation(libs.json.json)
-    implementation(libs.rometools.rome)
-    implementation(libs.proxy.bytebuddy)
+    testImplementation libs.bundles.mockito
 
-    implementation(libs.jetbrains.annotations)
-    implementation(libs.orm.hibernate)
+    mockitoAgent(libs.mockito.core) {
+        transitive = false
+    }
+
+    implementation(libs.rometools.rome)
+    api(libs.jetbrains.annotations)
+
+    api(libs.anisekai.ffmpeg)
+    api(libs.anisekai.scheduler)
+    api(libs.jackson.databind)
+    implementation(libs.jackson.datatype.jsr310)
+
+    implementation(libs.uuid)
 }
 
 test {
     useJUnitPlatform()
+}
+
+tasks {
+    test {
+        jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
+    }
 }
 
 // Required by Sentry Gradle plugin — assume these tasks are defined elsewhere
