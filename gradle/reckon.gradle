@@ -1,6 +1,6 @@
 reckon {
     defaultInferredScope = 'patch'
-    snapshots()
+    stages('beta', 'rc', 'release')
     scopeCalc = calcScopeFromProp() | calcScopeFromCommitMessages()
     stageCalc = calcStageFromProp()
 }
@@ -9,7 +9,7 @@ def scopes = ['major', 'minor', 'patch']
 def stages = [
         beta : 'beta',
         rc   : 'candidate',
-        final: 'release'
+        release: 'release'
 ]
 
 gradle.startParameter.taskNames.each { taskName ->
