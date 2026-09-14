@@ -121,7 +121,11 @@ class MediaConversionHandlerTest {
     private static MediaConversionInput input(String hash) {
 
         return new MediaConversionInput(
-                new MediaConversionInput.Episode(UUID.randomUUID(), "source.mkv", hash),
+                new MediaConversionInput.Episode(
+                        UUID.randomUUID(),
+                        new MediaConversionInput.Source(MediaConversionInput.Store.IMPORTS, "source.mkv"),
+                        hash
+                ),
                 new MediaConversionInput.ConversionOptions(Codec.AAC, Codec.H264, Codec.SUBTITLE_COPY)
         );
     }

@@ -18,14 +18,77 @@ class MediaConversionRecordsTest {
     void validatesAndNormalizesEpisodeSourceData() {
 
         UUID id = UUID.randomUUID();
-        MediaConversionInput.Episode episode = new MediaConversionInput.Episode(id, "batch/episode.mkv", HASH);
+        MediaConversionInput.Episode episode = new MediaConversionInput.Episode(
+                id,
+                new MediaConversionInput.Source(MediaConversionInput.Store.IMPORTS, "batch/episode.mkv"),
+                HASH
+        );
 
         assertEquals(id, episode.id());
-        assertEquals("batch/episode.mkv", episode.sourceReference());
+        assertEquals(MediaConversionInput.Store.IMPORTS, episode.source().store());
+        assertEquals("batch/episode.mkv", episode.source().reference());
         assertEquals(HASH.toLowerCase(), episode.hash());
-        assertThrows(IllegalArgumentException.class, () -> new MediaConversionInput.Episode(id, "../episode.mkv", HASH));
-        assertThrows(IllegalArgumentException.class, () -> new MediaConversionInput.Episode(id, "/episode.mkv", HASH));
-        assertThrows(IllegalArgumentException.class, () -> new MediaConversionInput.Episode(id, "episode.mkv", "not-a-hash"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new MediaConversionInput.Episode(
+                        id,
+                        new MediaConversionInput.Source(MediaConversionInput.Store.IMPORTS, "../episode.mkv"),
+                        HASH
+                )
+        );
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new MediaConversionInput.Episode(
+                        id,
+                        new MediaConversionInput.Source(MediaConversionInput.Store.IMPORTS, "/episode.mkv"),
+                        HASH
+                )
+        );
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new MediaConversionInput.Episode(
+                        id,
+                        new MediaConversionInput.Source(MediaConversionInput.Store.IMPORTS, "a/b/c.mkv"),
+                        HASH
+                )
+        );
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new MediaConversionInput.Episode(
+                        id,
+                        new MediaConversionInput.Source(MediaConversionInput.Store.IMPORTS, "episode.mkv"),
+                        "not-a-hash"
+                )
+        );
+    }
+
+    @Test
+    void validatesDownloadSourceReferences() {
+
+        UUID torrentId = UUID.randomUUID();
+        MediaConversionInput.Source source = new MediaConversionInput.Source(
+                MediaConversionInput.Store.DOWNLOADS,
+                torrentId + "/3"
+        );
+
+        assertEquals(MediaConversionInput.Store.DOWNLOADS, source.store());
+        assertEquals(torrentId + "/3", source.reference());
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new MediaConversionInput.Source(MediaConversionInput.Store.DOWNLOADS, "episode.mkv")
+        );
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new MediaConversionInput.Source(MediaConversionInput.Store.DOWNLOADS, "not-a-uuid/3")
+        );
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new MediaConversionInput.Source(MediaConversionInput.Store.DOWNLOADS, torrentId + "/-1")
+        );
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new MediaConversionInput.Source(MediaConversionInput.Store.DOWNLOADS, torrentId + "/a/b")
+        );
     }
 
     @Test
