@@ -36,13 +36,11 @@ dependencies {
         transitive = false
     }
 
-    implementation(libs.rometools.rome)
     api(libs.jetbrains.annotations)
 
     api(libs.anisekai.ffmpeg)
     api(libs.anisekai.scheduler)
     api(libs.jackson.databind)
-    implementation(libs.jackson.datatype.jsr310)
 
     implementation(libs.uuid)
 }
