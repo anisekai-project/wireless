@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 
 /**
  * Converts an episode according to a {@link MediaConversionInput} while delegating transport and storage operations to
@@ -112,7 +113,7 @@ public abstract class MediaConversionHandler implements TaskHandler<MediaConvers
         return MediaFile.of(path);
     }
 
-    Path convert(MediaFile media, MediaConversionInput.ConversionOptions options, TrackMapper mapper, Path destination) throws IOException, InterruptedException {
+    protected Path convert(MediaFile media, MediaConversionInput.ConversionOptions options, TrackMapper mapper, Path destination) throws IOException, InterruptedException {
 
         return FFMpeg.convert(media)
                      .video(options.videoCodec())
@@ -121,7 +122,23 @@ public abstract class MediaConversionHandler implements TaskHandler<MediaConvers
                      .streamMapper(mapper)
                      .file(destination)
                      .timeout(3, TimeUnit.HOURS)
+                     .cancellable(this.cancelSignal())
                      .run();
+    }
+
+    /**
+     * Cancellation signal consulted while converting. When it turns {@code true}, the running
+     * ffmpeg process is destroyed and conversion aborts with an {@link InterruptedException}.
+     * <p>
+     * Defaults to never cancelled. Long-running clients (e.g. remote workers abandoning a task)
+     * override this to wire their own abandonment flag.
+     *
+     * @return The cancellation signal for the conversion step.
+     */
+    @NotNull
+    protected BooleanSupplier cancelSignal() {
+
+        return () -> false;
     }
 
     static String sha256(Path path) throws IOException {

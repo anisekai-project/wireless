@@ -11,9 +11,15 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -118,6 +124,38 @@ class MediaConversionHandlerTest {
         assertTrue(output.tracks().isEmpty());
     }
 
+    @Test
+    void cancelSignalDefaultsToNeverCancelled() {
+
+        TestHandler handler = new TestHandler(
+                this.temporaryDirectory.resolve("source.mkv"),
+                this.temporaryDirectory.resolve("output.mkv")
+        );
+
+        assertFalse(handler.cancelSignal().getAsBoolean());
+    }
+
+    @Test
+    void cancelledConversionAbortsPromptlyAndStillCleansUp() throws Exception {
+
+        Path stub = this.temporaryDirectory.resolve("sleep-stub");
+        Files.writeString(stub, "#!/bin/sh\nsleep 30\n");
+        Files.setPosixFilePermissions(stub, PosixFilePermissions.fromString("rwxr-xr-x"));
+        System.setProperty("ffmpeg.binary", stub.toString());
+        try {
+            Path source = Files.writeString(this.temporaryDirectory.resolve("source.mkv"), "source");
+            CancellingHandler handler = new CancellingHandler(source, this.temporaryDirectory.resolve("output.mkv"));
+
+            Instant start = Instant.now();
+            assertThrows(InterruptedException.class, () -> handler.handle(input(MediaConversionHandler.sha256(source))));
+            assertTrue(Duration.between(start, Instant.now()).compareTo(Duration.ofSeconds(15)) < 0,
+                    "Conversion was not aborted promptly");
+            assertTrue(handler.cleaned);
+        } finally {
+            System.clearProperty("ffmpeg.binary");
+        }
+    }
+
     private static MediaConversionInput input(String hash) {
 
         return new MediaConversionInput(
@@ -181,7 +219,7 @@ class MediaConversionHandlerTest {
         }
 
         @Override
-        Path convert(MediaFile media, MediaConversionInput.ConversionOptions options, TrackMapper mapper, Path destination) throws IOException {
+        protected Path convert(MediaFile media, MediaConversionInput.ConversionOptions options, TrackMapper mapper, Path destination) throws IOException {
 
             Files.writeString(destination, "converted");
             return destination;
@@ -199,6 +237,60 @@ class MediaConversionHandlerTest {
             this.cleaned = true;
             this.cleanedSource = source;
             this.cleanedDestination = destination;
+        }
+
+    }
+
+    private static final class CancellingHandler extends MediaConversionHandler {
+
+        private final Path          source;
+        private final Path          destination;
+        private final AtomicBoolean cancelled = new AtomicBoolean(true);
+        private       boolean       cleaned;
+
+        private CancellingHandler(Path source, Path destination) {
+
+            this.source = source;
+            this.destination = destination;
+        }
+
+        @Override
+        public Path fetchEpisode(MediaConversionInput.Episode episode) {
+
+            return this.source;
+        }
+
+        @Override
+        public Path getStoragePath(MediaConversionInput.Episode episode, Path source) {
+
+            return this.destination;
+        }
+
+        @Override
+        MediaFile probe(Path path) {
+
+            MediaFile media = mock(MediaFile.class);
+            when(media.getPath()).thenReturn(this.source);
+            when(media.getStreams()).thenReturn(List.of());
+            return media;
+        }
+
+        @Override
+        public void pushEpisode(MediaConversionInput.Episode episode, Path path) {
+
+            throw new AssertionError("Cancelled conversion must not push");
+        }
+
+        @Override
+        public void cleanupEpisode(MediaConversionInput.Episode episode, Path source, Path destination) {
+
+            this.cleaned = true;
+        }
+
+        @Override
+        protected BooleanSupplier cancelSignal() {
+
+            return this.cancelled::get;
         }
 
     }
