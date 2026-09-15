@@ -1,5 +1,5 @@
 [versions]
-anisekai-ffmpeg = "1.0.0"
+anisekai-ffmpeg = "1.1.0"
 anisekai-scheduler = "1.5.0"
 catalogUpdater = "1.1.0"
 jackson = "2.22.0"
